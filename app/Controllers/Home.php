@@ -8,4 +8,9 @@ class Home extends BaseController
     {
         return view('home/home');
     }
+
+    public function webPage(): string
+    {
+        return view('web/webpage');
+    }
 }
