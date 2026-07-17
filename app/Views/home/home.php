@@ -17,7 +17,7 @@
                     <i data-lucide="users" class="fs-24 text-primary"></i>
                 </div>
                 <div>
-                    <h3 class="fw-bold mb-0">248</h3>
+                    <h3 class="fw-bold mb-0"><?= $totalClientes ?></h3>
                     <p class="text-muted mb-0">Clientes Registrados</p>
                 </div>
             </div>
@@ -30,7 +30,7 @@
                     <i data-lucide="file-text" class="fs-24 text-success"></i>
                 </div>
                 <div>
-                    <h3 class="fw-bold mb-0">186</h3>
+                    <h3 class="fw-bold mb-0"><?= $contratosActivos ?></h3>
                     <p class="text-muted mb-0">Contratos Activos</p>
                 </div>
             </div>
@@ -43,7 +43,7 @@
                     <i data-lucide="clock" class="fs-24 text-warning"></i>
                 </div>
                 <div>
-                    <h3 class="fw-bold mb-0">S/ 32,580</h3>
+                    <h3 class="fw-bold mb-0">S/ <?= $cobrosPendientes ?></h3>
                     <p class="text-muted mb-0">Cobros Pendientes</p>
                 </div>
             </div>
@@ -56,7 +56,7 @@
                     <i data-lucide="wallet" class="fs-24 text-info"></i>
                 </div>
                 <div>
-                    <h3 class="fw-bold mb-0">S/ 18,420</h3>
+                    <h3 class="fw-bold mb-0">S/ <?= $recaudadoMes ?></h3>
                     <p class="text-muted mb-0">Recaudado este Mes</p>
                 </div>
             </div>
@@ -69,7 +69,7 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">Últimos Clientes Registrados</h5>
-                <a href="#" class="btn btn-sm btn-soft-primary">Ver Todos</a>
+                <a href="<?= base_url('clientes') ?>" class="btn btn-sm btn-soft-primary">Ver Todos</a>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -84,48 +84,29 @@
                             </tr>
                         </thead>
                         <tbody>
+                            <?php if (empty($ultimosClientes)): ?>
                             <tr>
-                                <td><a href="#" class="text-body fw-semibold">Corporación Los Andes S.A.C.</a></td>
-                                <td>20123456789</td>
-                                <td>General</td>
-                                <td><span class="badge bg-success-subtle text-success">Activo</span></td>
-                                <td>15/06/2026</td>
+                                <td colspan="5" class="text-center text-muted py-3">No hay clientes registrados</td>
                             </tr>
+                            <?php else: ?>
+                            <?php foreach ($ultimosClientes as $c): ?>
                             <tr>
-                                <td><a href="#" class="text-body fw-semibold">Inversiones del Sur E.I.R.L.</a></td>
-                                <td>20456789123</td>
-                                <td>Mype</td>
-                                <td><span class="badge bg-success-subtle text-success">Activo</span></td>
-                                <td>12/06/2026</td>
+                                <td><a href="<?= base_url('clientes') ?>" class="text-body fw-semibold"><?= esc($c->razon_social) ?></a></td>
+                                <td><?= esc($c->ruc) ?></td>
+                                <td><?= esc($c->regimen_nombre ?? '—') ?></td>
+                                <td>
+                                    <?php if ($c->estado === 'activo'): ?>
+                                    <span class="badge bg-success-subtle text-success">Activo</span>
+                                    <?php elseif ($c->estado === 'inactivo'): ?>
+                                    <span class="badge bg-secondary-subtle text-secondary">Inactivo</span>
+                                    <?php else: ?>
+                                    <span class="badge bg-warning-subtle text-warning"><?= esc(ucfirst($c->estado)) ?></span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= date('d/m/Y', strtotime($c->created_at)) ?></td>
                             </tr>
-                            <tr>
-                                <td><a href="#" class="text-body fw-semibold">D&M Consultores Asociados S.A.C.</a></td>
-                                <td>20567893456</td>
-                                <td>General</td>
-                                <td><span class="badge bg-success-subtle text-success">Activo</span></td>
-                                <td>10/06/2026</td>
-                            </tr>
-                            <tr>
-                                <td><a href="#" class="text-body fw-semibold">Comercial La Victoria E.I.R.L.</a></td>
-                                <td>20789123456</td>
-                                <td>RUS</td>
-                                <td><span class="badge bg-warning-subtle text-warning">Pendiente</span></td>
-                                <td>08/06/2026</td>
-                            </tr>
-                            <tr>
-                                <td><a href="#" class="text-body fw-semibold">Grupo Tecnológico del Perú S.A.C.</a></td>
-                                <td>20891234567</td>
-                                <td>General</td>
-                                <td><span class="badge bg-success-subtle text-success">Activo</span></td>
-                                <td>05/06/2026</td>
-                            </tr>
-                            <tr>
-                                <td><a href="#" class="text-body fw-semibold">Transportes Unidos del Norte S.A.</a></td>
-                                <td>20178934512</td>
-                                <td>Mype</td>
-                                <td><span class="badge bg-success-subtle text-success">Activo</span></td>
-                                <td>03/06/2026</td>
-                            </tr>
+                            <?php endforeach; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -140,31 +121,31 @@
             </div>
             <div class="card-body">
                 <div class="d-flex align-items-start gap-3 mb-3">
-                    <span class="badge bg-danger rounded-pill mt-1">3</span>
+                    <span class="badge bg-<?= $contratosPorVencer > 0 ? 'danger' : 'secondary' ?> rounded-pill mt-1"><?= $contratosPorVencer ?></span>
                     <div>
                         <p class="mb-0 fw-semibold">Contratos por Vencer</p>
-                        <p class="text-muted fs-sm mb-0">5 contratos vencen en los próximos 7 días</p>
+                        <p class="text-muted fs-sm mb-0"><?= $contratosPorVencer ?> contratos vencen en los próximos 7 días</p>
                     </div>
                 </div>
                 <div class="d-flex align-items-start gap-3 mb-3">
-                    <span class="badge bg-warning rounded-pill mt-1">2</span>
+                    <span class="badge bg-<?= $cobrosVencidos > 0 ? 'warning' : 'secondary' ?> rounded-pill mt-1"><?= $cobrosVencidos > 0 ? '!' : '0' ?></span>
                     <div>
                         <p class="mb-0 fw-semibold">Cobros Vencidos</p>
-                        <p class="text-muted fs-sm mb-0">S/ 4,280 en cobros con más de 30 días de atraso</p>
+                        <p class="text-muted fs-sm mb-0">S/ <?= $cobrosVencidos ?> en cobros vencidos</p>
                     </div>
                 </div>
                 <div class="d-flex align-items-start gap-3 mb-3">
-                    <span class="badge bg-info rounded-pill mt-1">1</span>
+                    <span class="badge bg-<?= $pendientesEmision > 0 ? 'info' : 'secondary' ?> rounded-pill mt-1"><?= $pendientesEmision ?></span>
                     <div>
                         <p class="mb-0 fw-semibold">Comprobantes por Emitir</p>
-                        <p class="text-muted fs-sm mb-0">12 comprobantes del período pendientes de emisión</p>
+                        <p class="text-muted fs-sm mb-0"><?= $pendientesEmision ?> comprobantes pendientes de emisión</p>
                     </div>
                 </div>
                 <div class="d-flex align-items-start gap-3">
-                    <span class="badge bg-secondary rounded-pill mt-1">0</span>
+                    <span class="badge bg-<?= $tareasPendientes > 0 ? 'info' : 'secondary' ?> rounded-pill mt-1"><?= $tareasPendientes ?></span>
                     <div>
                         <p class="mb-0 fw-semibold">Tareas Pendientes</p>
-                        <p class="text-muted fs-sm mb-0">8 tareas asignadas sin completar</p>
+                        <p class="text-muted fs-sm mb-0"><?= $tareasPendientes ?> tareas sin completar</p>
                     </div>
                 </div>
             </div>
@@ -175,34 +156,21 @@
                 <h5 class="card-title mb-0">Clientes por Régimen</h5>
             </div>
             <div class="card-body">
+                <?php if (empty($clientesPorRegimen)): ?>
+                <p class="text-muted text-center mb-0">Sin datos</p>
+                <?php else: ?>
+                <?php $idx = 0; ?>
+                <?php foreach ($clientesPorRegimen as $r): ?>
+                <?php $pct = $totalRegimen > 0 ? round($r->total / $totalRegimen * 100) : 0; $idx++; ?>
                 <div class="d-flex justify-content-between mb-2">
-                    <span>General</span>
-                    <span class="fw-semibold">142</span>
+                    <span><?= esc($r->nombre ?? 'Sin régimen') ?></span>
+                    <span class="fw-semibold"><?= $r->total ?></span>
                 </div>
                 <div class="progress mb-3" style="height: 6px;">
-                    <div class="progress-bar bg-primary" style="width: 57%"></div>
+                    <div class="progress-bar bg-<?= $idx % 2 === 0 ? 'success' : 'primary' ?>" style="width: <?= $pct ?>%"></div>
                 </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Mype</span>
-                    <span class="fw-semibold">68</span>
-                </div>
-                <div class="progress mb-3" style="height: 6px;">
-                    <div class="progress-bar bg-success" style="width: 27%"></div>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span>RUS</span>
-                    <span class="fw-semibold">23</span>
-                </div>
-                <div class="progress mb-3" style="height: 6px;">
-                    <div class="progress-bar bg-warning" style="width: 9%"></div>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Otros</span>
-                    <span class="fw-semibold">15</span>
-                </div>
-                <div class="progress" style="height: 6px;">
-                    <div class="progress-bar bg-secondary" style="width: 6%"></div>
-                </div>
+                <?php endforeach; ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>

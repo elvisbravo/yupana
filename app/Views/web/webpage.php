@@ -84,6 +84,7 @@
             width: 148px;
             height: auto;
             display: block;
+            max-height: 56px;
         }
 
         .nav-links {
@@ -618,6 +619,10 @@
             transform: translateY(0);
         }
 
+        .toast.error {
+            background: #DC2626;
+        }
+
         /* --- FOOTER --- */
         footer {
             background: var(--gray-900);
@@ -763,8 +768,9 @@
                 padding: 24px;
                 gap: 16px;
                 box-shadow: var(--shadow);
-                transform: translateY(-120%);
+                transform: translateY(-200%);
                 transition: transform 0.3s;
+                will-change: transform;
             }
 
             .nav-links.open {
@@ -962,6 +968,16 @@
                     <h3>Auditoría Financiera</h3>
                     <p>Revisiones de estados financieros, control interno y due diligence para inversiones y fusiones.</p>
                 </div>
+                <div class="service-card">
+                    <div class="service-icon"><i class="fas fa-file-signature"></i></div>
+                    <h3>Asesoría en Contrataciones del Estado</h3>
+                    <p>Asesoramiento integral en procesos de selección, elaboración de propuestas y ejecución contractual bajo la normativa OSCE.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon"><i class="fas fa-landmark"></i></div>
+                    <h3>Asesoramiento a Entidades Públicas</h3>
+                    <p>Consultoría contable y administrativa para gobiernos locales, regionales y organismos del Estado peruano.</p>
+                </div>
             </div>
         </div>
     </section>
@@ -1003,7 +1019,7 @@
                         <i class="fas fa-clock"></i>
                         <div>
                             <h4>Horario de Atención</h4>
-                            <p>Lun - Vie: 9:00 am - 6:00 pm | Sáb: 9:00 am - 1:00 pm</p>
+                            <p>Lun - Vie: 8:00 am - 12:00 pm y 2:00 pm - 6:00 pm | Sáb: 8:00 am - 12:00 pm</p>
                         </div>
                     </div>
                 </div>
@@ -1025,7 +1041,7 @@
                         </div>
                         <div class="form-group">
                             <label for="telefono">Teléfono</label>
-                            <input type="tel" id="telefono" placeholder="999 888 777">
+                            <input type="tel" id="telefono" placeholder="999888777" maxlength="9" inputmode="numeric" pattern="[0-9]{9}">
                         </div>
                     </div>
                     <div class="form-group">
@@ -1038,6 +1054,8 @@
                             <option>Asesoría Tributaria</option>
                             <option>Constitución de Empresas</option>
                             <option>Auditoría Financiera</option>
+                            <option>Asesoría en Contrataciones del Estado</option>
+                            <option>Asesoramiento a Entidades Públicas</option>
                             <option>Otro</option>
                         </select>
                     </div>
@@ -1087,7 +1105,7 @@
                 <div class="footer-col">
                     <h4>Contacto</h4>
                     <ul>
-                        <li><a href="tel:964290705">(+51) 964 290 705</a></li>
+                        <li><a href="tel:942319820">(+51) 942 319 820</a></li>
                         <li><a href="mailto:groupyupana@gmail.com">groupyupana@gmail.com</a></li>
                         <li><a href="#">San Martín - San Martín - Morales</a></li>
                     </ul>
@@ -1182,6 +1200,11 @@
 
         if (heroStats) observer.observe(heroStats);
 
+        // --- Validación en tiempo real del teléfono ---
+        document.getElementById('telefono').addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 9);
+        });
+
         // --- Form Submit ---
         const form = document.getElementById('contactForm');
         const toast = document.getElementById('toast');
@@ -1192,27 +1215,54 @@
             const nombre = document.getElementById('nombre').value.trim();
             const apellido = document.getElementById('apellido').value.trim();
             const email = document.getElementById('email').value.trim();
+            const telefono = document.getElementById('telefono').value.trim();
+            const servicio = document.getElementById('servicio').value;
             const mensaje = document.getElementById('mensaje').value.trim();
 
-            if (!nombre || !apellido || !email || !mensaje) {
-                alert('Por favor completa todos los campos obligatorios.');
+            const errores = [];
+            if (!nombre) errores.push('El nombre es obligatorio.');
+            if (!apellido) errores.push('Los apellidos son obligatorios.');
+            if (!email) errores.push('El correo electrónico es obligatorio.');
+            else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errores.push('Ingrese un correo electrónico válido.');
+            if (telefono && !/^\d{9}$/.test(telefono)) errores.push('El teléfono debe tener exactamente 9 dígitos.');
+            if (!mensaje) errores.push('El mensaje es obligatorio.');
+
+            if (errores.length) {
+                toast.innerHTML = '✗ ' + errores.join('<br>');
+                toast.className = 'toast show error';
+                setTimeout(() => toast.className = 'toast', 5000);
                 return;
             }
 
-            const data = {
-                nombre,
-                apellido,
-                email,
-                telefono: document.getElementById('telefono').value.trim(),
-                servicio: document.getElementById('servicio').value,
-                mensaje
-            };
+            const data = new URLSearchParams();
+            data.append('nombres', nombre);
+            data.append('apellidos', apellido);
+            data.append('email', email);
+            data.append('telefono', telefono);
+            data.append('servicio', servicio);
+            data.append('mensaje', mensaje);
 
-            console.log('Formulario enviado:', data);
-
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 4000);
-            form.reset();
+            fetch('/contacto/guardar', { method: 'POST', body: data, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) {
+                        toast.textContent = '✓ ' + res.message;
+                        toast.className = 'toast show';
+                        setTimeout(() => toast.className = 'toast', 4000);
+                        form.reset();
+                    } else {
+                        const msg = res.message || 'Error al enviar.';
+                        const errors = res.errors ? Object.values(res.errors).join('<br>') : '';
+                        toast.innerHTML = '✗ ' + msg + (errors ? '<br>' + errors : '');
+                        toast.className = 'toast show error';
+                        setTimeout(() => toast.className = 'toast', 5000);
+                    }
+                })
+                .catch(() => {
+                    toast.textContent = '✗ Error de conexión. Intenta nuevamente.';
+                    toast.className = 'toast show error';
+                    setTimeout(() => toast.className = 'toast', 4000);
+                });
         });
 
         // --- Smooth reveal on scroll ---

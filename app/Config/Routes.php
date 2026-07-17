@@ -4,6 +4,7 @@ use CodeIgniter\Router\RouteCollection;
 
 /** @var RouteCollection $routes */
 $routes->get('/', 'Home::webPage');
+$routes->post('/contacto/guardar', 'Home::guardarContacto');
 
 $routes->get('/login', 'Auth::login');
 $routes->post('/login', 'Auth::loginPost');
@@ -243,6 +244,11 @@ $routes->get('/empresa/correlativos/obtener/(:num)', 'Empresa::obtenerCorrelativ
 $routes->post('/empresa/correlativos/guardar', 'Empresa::guardarCorrelativo');
 $routes->post('/empresa/correlativos/actualizar/(:num)', 'Empresa::actualizarCorrelativo/$1');
 $routes->get('/empresa/correlativos/eliminar/(:num)', 'Empresa::eliminarCorrelativo/$1');
+
+$routes->get('/solicitudes', 'Solicitudes::index');
+$routes->get('/solicitudes/listar', 'Solicitudes::listar');
+$routes->get('/solicitudes/obtener/(:num)', 'Solicitudes::obtener/$1');
+$routes->get('/solicitudes/eliminar/(:num)', 'Solicitudes::eliminar/$1');
 
 $routes->get('/alertas', 'Alertas::vencimientoContrato');
 $routes->get('/alertas/vencimiento-contrato', 'Alertas::vencimientoContrato');
