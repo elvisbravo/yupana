@@ -3,7 +3,8 @@
 use CodeIgniter\Router\RouteCollection;
 
 /** @var RouteCollection $routes */
-$routes->get('/', 'Home::index');
+$routes->get('/', 'Home::webPage');
+$routes->post('/contacto/guardar', 'Home::guardarContacto');
 
 $routes->get('/login', 'Auth::login');
 $routes->post('/login', 'Auth::loginPost');
@@ -264,6 +265,11 @@ $routes->group('api/facturacion', ['filter' => 'apitoken'], function ($routes) {
     $routes->get('configuracion', 'ApiFacturacion::configuracion');
     $routes->post('generar', 'ApiFacturacion::generar');
 });
+
+$routes->get('/solicitudes', 'Solicitudes::index');
+$routes->get('/solicitudes/listar', 'Solicitudes::listar');
+$routes->get('/solicitudes/obtener/(:num)', 'Solicitudes::obtener/$1');
+$routes->get('/solicitudes/eliminar/(:num)', 'Solicitudes::eliminar/$1');
 
 $routes->get('/alertas', 'Alertas::vencimientoContrato');
 $routes->get('/alertas/vencimiento-contrato', 'Alertas::vencimientoContrato');

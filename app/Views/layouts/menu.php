@@ -4,6 +4,7 @@
         min-width: 70px !important;
         transition: width 0.2s ease;
     }
+
     .yupana-collapsed .sidenav-menu .menu-text,
     .yupana-collapsed .sidenav-menu .side-nav-title,
     .yupana-collapsed .sidenav-menu .badge,
@@ -15,30 +16,37 @@
     .yupana-collapsed .sidenav-menu .menu-collapse-box span {
         display: none !important;
     }
+
     .yupana-collapsed .sidenav-menu .side-nav-link {
         justify-content: center !important;
         padding: 12px 0 !important;
         text-align: center !important;
     }
+
     .yupana-collapsed .sidenav-menu .side-nav-link .menu-icon {
         margin: 0 !important;
     }
+
     .yupana-collapsed .sidenav-menu .sidenav-user a {
         justify-content: center !important;
         padding: 10px 0 !important;
     }
+
     .yupana-collapsed .sidenav-menu .sidenav-user img {
         margin-right: 0 !important;
     }
+
     .yupana-collapsed .sidenav-menu .menu-collapse-box {
         padding: 12px 0 !important;
         display: flex !important;
         justify-content: center !important;
     }
+
     .yupana-collapsed .sidenav-menu .menu-collapse-box .button-collapse-toggle {
         gap: 0 !important;
         padding: 6px !important;
     }
+
     .yupana-collapsed .content-page {
         margin-left: 70px !important;
     }
@@ -51,11 +59,13 @@
         left: 0 !important;
         z-index: 1040 !important;
         height: 100% !important;
-        box-shadow: 4px 0 20px rgba(0,0,0,0.1) !important;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1) !important;
     }
+
     .yupana-collapsed .sidenav-menu.yupana-hover .scrollbar {
         overflow: auto !important;
     }
+
     .yupana-collapsed .sidenav-menu.yupana-hover .menu-text,
     .yupana-collapsed .sidenav-menu.yupana-hover .side-nav-title,
     .yupana-collapsed .sidenav-menu.yupana-hover .badge,
@@ -67,28 +77,35 @@
     .yupana-collapsed .sidenav-menu.yupana-hover .menu-collapse-box span {
         display: block !important;
     }
+
     .yupana-collapsed .sidenav-menu.yupana-hover .sub-menu {
         display: block !important;
     }
+
     .yupana-collapsed .sidenav-menu.yupana-hover .side-nav-link {
         justify-content: flex-start !important;
         padding: 8px 16px !important;
         text-align: left !important;
     }
+
     .yupana-collapsed .sidenav-menu.yupana-hover .side-nav-link .menu-icon {
         margin-right: 8px !important;
     }
+
     .yupana-collapsed .sidenav-menu.yupana-hover .sidenav-user a {
         justify-content: flex-start !important;
         padding: 10px 16px !important;
     }
+
     .yupana-collapsed .sidenav-menu.yupana-hover .sidenav-user img {
         margin-right: 10px !important;
     }
+
     .yupana-collapsed .sidenav-menu.yupana-hover .menu-collapse-box {
         padding: 12px 16px !important;
         justify-content: flex-start !important;
     }
+
     .yupana-collapsed .sidenav-menu.yupana-hover .menu-collapse-box .button-collapse-toggle {
         gap: 8px !important;
         padding: 6px 12px !important;
@@ -99,10 +116,12 @@
             width: 260px !important;
             min-width: 260px !important;
         }
+
         .yupana-collapsed .sidenav-menu.yupana-hover {
             position: relative !important;
             box-shadow: none !important;
         }
+
         .yupana-collapsed .content-page {
             margin-left: 0 !important;
         }
@@ -115,7 +134,7 @@
         <!-- User -->
         <div class="sidenav-user text-nowrap border border-dashed rounded-3">
             <a href="#!" class="sidenav-user-name d-flex align-items-center overflow-hidden">
-                <img src="assets/images/users/user-2.jpg" width="36" class="rounded-circle me-2 d-flex flex-shrink-0" alt="user-image">
+                <img src="<?= base_url() ?>assets/images/users/user-2.jpg" width="36" class="rounded-circle me-2 d-flex flex-shrink-0" alt="user-image">
                 <span class="min-w-0 overflow-hidden">
                     <h5 class="my-0 fw-semibold text-truncate"><?= session('nombres') . ' ' . session('apellidos') ?></h5>
                     <h6 class="my-0 text-muted text-truncate"><?= session('rol_nombre') ?></h6>
@@ -137,7 +156,7 @@
 </div>
 
 <script>
-    (function () {
+    (function() {
         var html = document.documentElement;
         var sideNavMenu = document.querySelector('.sidenav-menu');
 
@@ -151,12 +170,12 @@
 
         // Hover expand/collapse for collapsed state (using JS not CSS :hover)
         if (sideNavMenu) {
-            sideNavMenu.addEventListener('mouseenter', function () {
+            sideNavMenu.addEventListener('mouseenter', function() {
                 if (html.classList.contains('yupana-collapsed')) {
                     this.classList.add('yupana-hover');
                 }
             });
-            sideNavMenu.addEventListener('mouseleave', function () {
+            sideNavMenu.addEventListener('mouseleave', function() {
                 this.classList.remove('yupana-hover');
             });
         }
@@ -172,7 +191,7 @@
                 if (span) span.textContent = 'Expandir Menú';
             }
 
-            menuCollapseBtn.addEventListener('click', function (e) {
+            menuCollapseBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
                 var wasCollapsed = html.classList.contains('yupana-collapsed');
                 if (wasCollapsed) {
