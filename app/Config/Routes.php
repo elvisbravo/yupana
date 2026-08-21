@@ -9,6 +9,9 @@ $routes->get('/login', 'Auth::login');
 $routes->post('/login', 'Auth::loginPost');
 $routes->get('/logout', 'Auth::logout');
 
+$routes->get('/verificar', 'Verificacion::index');
+$routes->post('/verificar/consultar', 'Verificacion::consultar');
+
 $routes->get('/home', 'Home::index');
 
 $routes->get('/servicios', 'ServiciosContratados::index');
@@ -35,6 +38,7 @@ $routes->get('/comprobantes/obtener-correlativo', 'Comprobantes::obtenerCorrelat
 $routes->get('/comprobantes/obtener-cliente', 'Comprobantes::obtenerCliente');
 $routes->post('/comprobantes/guardar', 'Comprobantes::guardar');
 $routes->post('/comprobantes/guardar-cliente', 'Comprobantes::guardarClienteRapido');
+$routes->post('/comprobantes/enviar-sunat/(:num)', 'Comprobantes::enviarSunat/$1');
 
 $routes->get('/tarifas', 'TarifasMensuales::index');
 $routes->get('/tarifas/mensuales', 'TarifasMensuales::index');
@@ -243,6 +247,23 @@ $routes->get('/empresa/correlativos/obtener/(:num)', 'Empresa::obtenerCorrelativ
 $routes->post('/empresa/correlativos/guardar', 'Empresa::guardarCorrelativo');
 $routes->post('/empresa/correlativos/actualizar/(:num)', 'Empresa::actualizarCorrelativo/$1');
 $routes->get('/empresa/correlativos/eliminar/(:num)', 'Empresa::eliminarCorrelativo/$1');
+$routes->get('/empresa/cuentas/listar', 'Empresa::listarCuentas');
+$routes->get('/empresa/cuentas/obtener/(:num)', 'Empresa::obtenerCuenta/$1');
+$routes->post('/empresa/cuentas/guardar', 'Empresa::guardarCuenta');
+$routes->post('/empresa/cuentas/actualizar/(:num)', 'Empresa::actualizarCuenta/$1');
+$routes->get('/empresa/cuentas/eliminar/(:num)', 'Empresa::eliminarCuenta/$1');
+
+$routes->get('/facturacion-automatica', 'FacturacionAutomatica::index');
+$routes->get('/facturacion-automatica/configuracion', 'FacturacionAutomatica::configuracion');
+$routes->post('/facturacion-automatica/configuracion/guardar', 'FacturacionAutomatica::guardarConfiguracion');
+$routes->get('/facturacion-automatica/generadas', 'FacturacionAutomatica::generadas');
+$routes->get('/facturacion-automatica/clientes', 'FacturacionAutomatica::clientes');
+$routes->post('/facturacion-automatica/clientes/guardar', 'FacturacionAutomatica::guardarClientes');
+
+$routes->group('api/facturacion', ['filter' => 'apitoken'], function ($routes) {
+    $routes->get('configuracion', 'ApiFacturacion::configuracion');
+    $routes->post('generar', 'ApiFacturacion::generar');
+});
 
 $routes->get('/alertas', 'Alertas::vencimientoContrato');
 $routes->get('/alertas/vencimiento-contrato', 'Alertas::vencimientoContrato');

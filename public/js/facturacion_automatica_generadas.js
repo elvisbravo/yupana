@@ -1,17 +1,19 @@
 (function () {
     'use strict';
 
-    var filtroTipo = document.getElementById('filtroTipo');
-    var filtroPeriodo = document.getElementById('filtroPeriodo');
-    var filtroAnio = document.getElementById('filtroAnio');
-    var btnFiltrar = document.getElementById('btnFiltrar');
+    var filtroPeriodo = document.getElementById('filtroPeriodoCron');
+    var titulo = document.getElementById('tituloGenerado');
 
-    var tabla = new DataTable('#tablaVentas', {
-        ajax: function (data, cb, s) {
-            var params = new URLSearchParams();
-            if (filtroTipo.value) params.set('tipo', filtroTipo.value);
+    function actualizarTitulo() {
+        var periodo = filtroPeriodo.value;
+        var label = (typeof PERIODOS_LABELS !== 'undefined' && PERIODOS_LABELS[periodo]) ? PERIODOS_LABELS[periodo] : periodo;
+        titulo.textContent = 'Facturas Generadas — Período: ' + label;
+    }
+
+    var tabla = new DataTable('#tablaGeneradas', {
+        ajax: function (data, cb) {
+            var params = new URLSearchParams({ origen: 'cron' });
             if (filtroPeriodo.value) params.set('periodo', filtroPeriodo.value);
-            if (filtroAnio.value) params.set('anio', filtroAnio.value);
             fetch('/comprobantes/ventas/listar?' + params.toString())
                 .then(function (r) { return r.json(); })
                 .then(function (res) { cb(res); })
@@ -53,11 +55,14 @@
         }
     });
 
-    btnFiltrar.addEventListener('click', function () { tabla.ajax.reload(); });
+    filtroPeriodo.addEventListener('change', function () {
+        actualizarTitulo();
+        tabla.ajax.reload();
+    });
 
     tabla.on('draw', function () { if (typeof lucide !== 'undefined') lucide.createIcons(); });
 
-    document.querySelector('#tablaVentas tbody').addEventListener('click', function (e) {
+    document.querySelector('#tablaGeneradas tbody').addEventListener('click', function (e) {
         var btn = e.target.closest('.enviar-sunat');
         if (!btn) return;
         btn.disabled = true;
@@ -72,4 +77,6 @@
                 btn.disabled = false;
             });
     });
+
+    actualizarTitulo();
 })();

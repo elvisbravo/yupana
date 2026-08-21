@@ -24,9 +24,10 @@ class Comprobantes extends BaseController
         $tipo = $this->request->getGet('tipo');
         $periodo = $this->request->getGet('periodo');
         $anio = $this->request->getGet('anio');
+        $origen = $this->request->getGet('origen');
 
         $sql = "
-            SELECT c.*, tc.nombre as tipo_nombre, tc.abreviatura, cl.razon_social, cl.ruc
+            SELECT c.*, tc.nombre as tipo_nombre, tc.abreviatura, tc.codigo as tipo_codigo, cl.razon_social, cl.ruc
             FROM comprobantes_emitidos c
             JOIN tipos_comprobante tc ON tc.id = c.tipo_comprobante_id
             LEFT JOIN clientes cl ON cl.id = c.cliente_id
@@ -36,6 +37,7 @@ class Comprobantes extends BaseController
         if ($tipo) { $sql .= " AND c.tipo_comprobante_id = ?"; $params[] = $tipo; }
         if ($periodo) { $sql .= " AND c.periodo = ?"; $params[] = $periodo; }
         if ($anio) { $sql .= " AND YEAR(c.fecha_emision) = ?"; $params[] = $anio; }
+        if ($origen) { $sql .= " AND c.origen = ?"; $params[] = $origen; }
         $sql .= " ORDER BY c.fecha_emision DESC, c.id DESC LIMIT 1000";
 
         $rows = $db->query($sql, $params)->getResult();
@@ -54,10 +56,29 @@ class Comprobantes extends BaseController
             'no_pagado' => 'badge-soft-danger',
         ];
 
+        $tiposSoportados = ['01', '03', '07', '08'];
+
         $data = [];
         foreach ($rows as $r) {
             $sunatBadge = '<span class="badge ' . ($badges[$r->estado_sunat] ?? 'badge-soft-secondary') . '">' . ucfirst($r->estado_sunat) . '</span>';
             $pagoBadge = '<span class="badge ' . ($pagoBadges[$r->estado_pago] ?? 'badge-soft-secondary') . '">' . ucfirst(str_replace('_', ' ', $r->estado_pago)) . '</span>';
+
+            $acciones = '';
+            if (in_array($r->estado_sunat, ['pendiente', 'rechazado'], true) && in_array($r->tipo_codigo, $tiposSoportados, true)) {
+                $titulo = $r->sunat_mensaje ? esc($r->sunat_mensaje, 'attr') : 'Enviar a SUNAT';
+                $acciones .= '<button class="btn btn-sm btn-soft-primary enviar-sunat" data-id="' . $r->id . '" title="' . $titulo . '">'
+                    . '<i data-lucide="send" style="width:14px;height:14px;"></i></button> ';
+            }
+            if (!empty($r->pdf_url)) {
+                $acciones .= '<a class="btn btn-sm btn-soft-danger" href="' . base_url($r->pdf_url) . '" target="_blank" title="Ver PDF">PDF</a> ';
+            }
+            if (!empty($r->xml_url)) {
+                $acciones .= '<a class="btn btn-sm btn-soft-secondary" href="' . base_url($r->xml_url) . '" download title="Descargar XML">XML</a> ';
+            }
+            if (!empty($r->cdr_url)) {
+                $acciones .= '<a class="btn btn-sm btn-soft-secondary" href="' . base_url($r->cdr_url) . '" download title="Descargar CDR">CDR</a>';
+            }
+
             $data[] = [
                 $r->serie . '-' . $r->numero,
                 esc($r->tipo_nombre),
@@ -72,6 +93,7 @@ class Comprobantes extends BaseController
                 $sunatBadge,
                 $pagoBadge,
                 esc($r->observaciones ?? '—'),
+                $acciones ?: '—',
             ];
         }
 
@@ -104,6 +126,7 @@ class Comprobantes extends BaseController
 
         $servicios = $db->query("
             SELECT sc.id, ts.nombre as servicio, ts.id as tipo_servicio_id,
+                   ts.codigo_sunat, ts.unidad_medida, ts.tipo_afectacion_igv,
                    COALESCE(tm.monto, 0) as monto,
                    COALESCE(tm.moneda, 'PEN') as moneda
             FROM servicios_contratados sc
@@ -142,9 +165,12 @@ class Comprobantes extends BaseController
         $insert = [
             'tipo_comprobante_id' => $data['tipo_comprobante_id'],
             'cliente_id' => $data['cliente_id'],
+            'sede_id' => $data['sede_id'] ?? null,
             'serie' => $data['serie'],
             'numero' => $data['numero'],
             'fecha_emision' => $data['fecha_emision'],
+            'fecha_vencimiento' => $data['fecha_emision'],
+            'forma_pago' => 'CONTADO',
             'periodo' => date('Y-m', strtotime($data['fecha_emision'])),
             'moneda' => $data['moneda'] ?? 'PEN',
             'subtotal' => $data['subtotal'],
@@ -163,11 +189,23 @@ class Comprobantes extends BaseController
         }
 
         $db->table('comprobantes_emitidos')->insert($insert);
+        $comprobanteId = $db->insertID();
+
+        $envio = (new \App\Libraries\SunatClient())->enviar($comprobanteId);
+        (new \App\Libraries\ComprobantePdf())->generar($comprobanteId);
 
         return $this->response->setJSON([
             'success' => true,
             'message' => 'Comprobante creado correctamente.',
+            'sunat' => $envio,
         ]);
+    }
+
+    public function enviarSunat($id)
+    {
+        $resultado = (new \App\Libraries\SunatClient())->enviar((int) $id);
+
+        return $this->response->setJSON($resultado);
     }
 
     public function guardarClienteRapido()

@@ -35,6 +35,7 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'auth'          => \App\Filters\AuthFilter::class,
+        'apitoken'      => \App\Filters\ApiTokenFilter::class,
     ];
 
     /**
@@ -73,7 +74,7 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
-            'auth' => ['except' => ['/login', '/logout']],
+            'auth' => ['except' => ['/login', '/logout', 'api/facturacion/*', 'verificar', 'verificar/*']],
             // 'honeypot',
             // 'csrf',
             // 'invalidchars',

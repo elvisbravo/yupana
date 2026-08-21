@@ -62,6 +62,31 @@
                             <?php endif; ?>
                         </div>
                     </div>
+                    <hr>
+                    <h6 class="fw-semibold mb-2">Credenciales SUNAT</h6>
+                    <p class="text-muted fs-xxs mb-2">Usadas para firmar y enviar comprobantes a SUNAT. La contraseña y clave del certificado se guardan encriptadas — déjalas en blanco para no modificarlas.</p>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Usuario SOL</label>
+                            <input type="text" class="form-control form-control-sm" name="usuario_sol" value="<?= esc($empresa->usuario_sol ?? '') ?>">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Clave SOL <?= !empty($empresa->password_sol) ? '<span class="text-success fs-xxs">(configurada)</span>' : '' ?></label>
+                            <input type="password" class="form-control form-control-sm" name="password_sol" autocomplete="new-password" placeholder="<?= !empty($empresa->password_sol) ? '••••••••' : '' ?>">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Clave del Certificado <?= !empty($empresa->password_certificate) ? '<span class="text-success fs-xxs">(configurada)</span>' : '' ?></label>
+                            <input type="password" class="form-control form-control-sm" name="password_certificate" autocomplete="new-password" placeholder="<?= !empty($empresa->password_certificate) ? '••••••••' : '' ?>">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6 class="fw-semibold mb-2">PDF de Comprobantes</h6>
+                    <div class="mb-2">
+                        <label class="form-label">Leyenda (opcional)</label>
+                        <textarea class="form-control form-control-sm" name="leyenda_pdf" rows="2" placeholder="Texto legal que se imprime en el PDF, si corresponde (ej. beneficios tributarios). Déjalo vacío si no aplica."><?= esc($empresa->leyenda_pdf ?? '') ?></textarea>
+                    </div>
+
                     <div class="mt-3">
                         <button type="submit" class="btn btn-sm btn-primary" id="btnGuardarEmpresa">
                             <span class="spinner-border spinner-border-sm me-1 d-none" role="status"></span>
@@ -122,6 +147,34 @@
                             <th>Inicio</th>
                             <th>Actual</th>
                             <th>Envío</th>
+                            <th style="width:80px;">Acción</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cuentas Bancarias -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Cuentas Bancarias</h5>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#cuentaModal">
+                    <i data-lucide="plus" class="me-1" style="width:14px;height:14px;"></i> Nueva Cuenta
+                </button>
+            </div>
+            <div class="card-body">
+                <table id="tablaCuentas" class="table table-striped dt-responsive align-middle mb-0">
+                    <thead class="thead-sm text-uppercase fs-xxs">
+                        <tr>
+                            <th>Banco</th>
+                            <th>Tipo</th>
+                            <th>Moneda</th>
+                            <th>N° Cuenta</th>
+                            <th>CCI</th>
                             <th style="width:80px;">Acción</th>
                         </tr>
                     </thead>
@@ -229,11 +282,20 @@
                             <input type="email" class="form-control form-control-sm" name="correo" id="f_sede_correo">
                         </div>
                     </div>
-                    <div class="mb-2">
+                    <div class="mb-3">
                         <label class="form-label">Tipo Envío</label>
                         <select class="form-select form-select-sm" name="tipo_envio" id="f_sede_envio">
                             <option value="prueba">Prueba</option>
                             <option value="produccion">Producción</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Ubigeo</label>
+                        <select class="form-select form-select-sm" name="ubigeo_id" id="f_sede_ubigeo">
+                            <option value="">Seleccionar...</option>
+                            <?php foreach ($ubigeos as $u): ?>
+                            <option value="<?= $u->id ?>"><?= esc($u->departamento) ?> / <?= esc($u->provincia) ?> / <?= esc($u->distrito) ?></option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                 </div>
@@ -241,6 +303,59 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-soft-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="submit" class="btn btn-sm btn-primary" id="btnGuardarSede" form="sedeForm">
+                    <span class="spinner-border spinner-border-sm me-1 d-none" role="status"></span>
+                    Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cuenta Bancaria -->
+<div class="modal fade" id="cuentaModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Cuenta Bancaria</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="cuentaForm">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="cuentaId">
+                    <div id="cuentaAlert"></div>
+                    <div class="mb-3">
+                        <label class="form-label">Banco <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-sm" name="banco" id="f_cuenta_banco" placeholder="Ej: BCP" required>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Tipo de Cuenta</label>
+                            <select class="form-select form-select-sm" name="tipo_cuenta" id="f_cuenta_tipo">
+                                <option value="corriente">Corriente</option>
+                                <option value="ahorros">Ahorros</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Moneda</label>
+                            <select class="form-select form-select-sm" name="moneda" id="f_cuenta_moneda">
+                                <option value="PEN">PEN</option>
+                                <option value="USD">USD</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">N° de Cuenta <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-sm" name="numero_cuenta" id="f_cuenta_numero" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">CCI (opcional)</label>
+                        <input type="text" class="form-control form-control-sm" name="numero_cci" id="f_cuenta_cci">
+                    </div>
+                </div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-soft-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-sm btn-primary" id="btnGuardarCuenta" form="cuentaForm">
                     <span class="spinner-border spinner-border-sm me-1 d-none" role="status"></span>
                     Guardar
                 </button>

@@ -19,34 +19,24 @@
 
                 <form id="comprobanteForm">
                     <div class="row g-3 mb-3">
-                        <div class="col-md-3">
+                        <div class="col-md-6">
                             <label class="form-label">Sede <span class="text-danger">*</span></label>
                             <select class="form-select form-select-sm" name="sede_id" id="f_sede" required>
                                 <option value="">Seleccionar...</option>
-                                <?php foreach ($sedes as $s): ?>
-                                <option value="<?= $s->id ?>" data-envio="<?= $s->tipo_envio ?>"><?= esc($s->nombre) ?></option>
+                                <?php foreach ($sedes as $i => $s): ?>
+                                <option value="<?= $s->id ?>" data-envio="<?= $s->tipo_envio ?>" <?= $i === 0 ? 'selected' : '' ?>><?= esc($s->nombre) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-6">
                             <label class="form-label">Tipo Comprobante <span class="text-danger">*</span></label>
                             <select class="form-select form-select-sm" name="tipo_comprobante_id" id="f_tipo" required disabled>
                                 <option value="">Primero seleccione sede</option>
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Serie <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control form-control-sm" name="serie" id="f_serie" readonly>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Número <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control form-control-sm" name="numero" id="f_numero" readonly>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label">Tipo Envío</label>
-                            <input type="text" class="form-control form-control-sm" id="f_tipo_envio" readonly>
-                            <input type="hidden" name="tipo_envio" id="f_tipo_envio_hidden">
-                        </div>
+                        <input type="hidden" name="serie" id="f_serie">
+                        <input type="hidden" name="numero" id="f_numero">
+                        <input type="hidden" name="tipo_envio" id="f_tipo_envio_hidden">
                     </div>
                     <div class="row g-3 mb-3">
                         <div class="col-md-3">
@@ -75,7 +65,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Fecha Emisión <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control form-control-sm" name="fecha_emision" id="f_fecha" value="<?= date('Y-m-d') ?>">
+                            <input type="date" class="form-control form-control-sm" name="fecha_emision" id="f_fecha" value="<?= (new DateTime('now', new DateTimeZone('America/Lima')))->format('Y-m-d') ?>">
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Estado Pago</label>

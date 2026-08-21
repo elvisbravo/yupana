@@ -11,8 +11,9 @@
     agregarItem('', 1, 0);
 
     // Sede change: enable tipo dropdown, load correlativos info
-    document.getElementById('f_sede').addEventListener('change', function () {
-        var sedeId = this.value;
+    function cargarTiposDeSede() {
+        var sedeSelect = document.getElementById('f_sede');
+        var sedeId = sedeSelect.value;
         var fTipo = document.getElementById('f_tipo');
 
         document.getElementById('f_serie').value = '';
@@ -21,14 +22,12 @@
         if (!sedeId) {
             fTipo.disabled = true;
             fTipo.innerHTML = '<option value="">Primero seleccione sede</option>';
-            document.getElementById('f_tipo_envio').value = '';
             document.getElementById('f_tipo_envio_hidden').value = '';
             return;
         }
 
-        var opt = this.options[this.selectedIndex];
+        var opt = sedeSelect.options[sedeSelect.selectedIndex];
         var envio = opt.getAttribute('data-envio') || 'prueba';
-        document.getElementById('f_tipo_envio').value = envio.charAt(0).toUpperCase() + envio.slice(1);
         document.getElementById('f_tipo_envio_hidden').value = envio;
 
         fTipo.disabled = true;
@@ -51,7 +50,14 @@
             .catch(function () {
                 fTipo.innerHTML = '<option value="">Error al cargar</option>';
             });
-    });
+    }
+
+    document.getElementById('f_sede').addEventListener('change', cargarTiposDeSede);
+
+    // La sede viene preseleccionada (la primera) al cargar la página: disparar la carga de una vez
+    if (document.getElementById('f_sede').value) {
+        cargarTiposDeSede();
+    }
 
     // Tipo change: load correlativo
     document.getElementById('f_tipo').addEventListener('change', function () {
@@ -157,7 +163,7 @@
                         btn.className = 'btn btn-sm btn-outline-primary';
                         btn.textContent = s.servicio + ' (S/ ' + (parseFloat(s.monto) || 0).toFixed(2) + ')';
                         btn.addEventListener('click', function () {
-                            agregarItem(s.servicio, 1, parseFloat(s.monto) || 0);
+                            agregarItem(s.servicio, 1, parseFloat(s.monto) || 0, s.codigo_sunat, s.unidad_medida, s.tipo_afectacion_igv);
                         });
                         lista.appendChild(btn);
                     });
@@ -215,9 +221,12 @@
         agregarItem('', 1, 0);
     });
 
-    function agregarItem(desc, cant, precio) {
+    function agregarItem(desc, cant, precio, codigo, unidad, tipoAfectacion) {
         var tr = document.createElement('tr');
         tr.className = 'item-row';
+        tr.dataset.codigo = codigo || 'P001';
+        tr.dataset.unidad = unidad || 'ZZ';
+        tr.dataset.tipoAfectacion = tipoAfectacion || '20';
         tr.innerHTML =
             '<td><input type="text" class="form-control form-control-sm item-desc" value="' + escHtml(desc) + '" placeholder="Descripción"></td>' +
             '<td><input type="number" class="form-control form-control-sm item-cant" value="' + cant + '" min="1" step="1"></td>' +
@@ -284,7 +293,15 @@
             var cant = parseFloat(row.querySelector('.item-cant').value) || 0;
             var precio = parseFloat(row.querySelector('.item-precio').value) || 0;
             if (desc && cant > 0) {
-                items.push({ descripcion: desc, cantidad: cant, precio_unitario: precio, total: cant * precio });
+                items.push({
+                    codigo: row.dataset.codigo || 'P001',
+                    descripcion: desc,
+                    unidad: row.dataset.unidad || 'ZZ',
+                    cantidad: cant,
+                    precio_unitario: precio,
+                    tipo_afectacion: row.dataset.tipoAfectacion || '10',
+                    total: cant * precio,
+                });
             }
         });
         document.getElementById('f_detalle').value = items.length ? JSON.stringify(items) : '';
@@ -322,13 +339,16 @@
         alertBox.innerHTML = '';
         btnGuardar.disabled = false;
         spinner.classList.add('d-none');
-        document.getElementById('f_fecha').value = new Date().toISOString().split('T')[0];
+        var hoy = new Date();
+        document.getElementById('f_fecha').value = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
         document.getElementById('f_serie').value = '';
         document.getElementById('f_numero').value = '';
-        document.getElementById('f_tipo_envio').value = '';
         document.getElementById('f_tipo_envio_hidden').value = '';
         document.getElementById('f_tipo').disabled = true;
         document.getElementById('f_tipo').innerHTML = '<option value="">Primero seleccione sede</option>';
+        if (document.getElementById('f_sede').value) {
+            cargarTiposDeSede();
+        }
         document.getElementById('serviciosContainer').style.display = 'none';
         document.getElementById('serviciosLista').innerHTML = '';
         clienteTexto.value = '';

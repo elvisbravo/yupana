@@ -59,14 +59,8 @@
                             <th>Emisión</th>
                             <th>Período</th>
                             <th>Cliente</th>
-                            <th>RUC</th>
-                            <th>Subtotal</th>
-                            <th>IGV</th>
                             <th>Total</th>
-                            <th>Moneda</th>
-                            <th>Sunat</th>
-                            <th>Pago</th>
-                            <th>Observaciones</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                 </table>

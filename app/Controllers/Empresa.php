@@ -10,6 +10,7 @@ class Empresa extends BaseController
         $data['empresa'] = $db->table('empresa')->where('id', 1)->get()->getRow();
         $data['sedes'] = $db->table('sedes')->where('empresa_id', 1)->where('activo', 1)->orderBy('nombre')->get()->getResult();
         $data['comprobantes'] = $db->table('tipos_comprobante')->orderBy('nombre')->get()->getResult();
+        $data['ubigeos'] = $db->table('ubigeos')->where('activo', 1)->orderBy('departamento')->orderBy('provincia')->orderBy('distrito')->get()->getResult();
         return view('empresa/index', $data);
     }
 
@@ -26,18 +27,27 @@ class Empresa extends BaseController
             $data['logo_url'] = 'uploads/empresa/' . $newName;
         }
 
+        $encrypter = service('encrypter');
+        foreach (['password_sol', 'password_certificate'] as $campo) {
+            if (empty($data[$campo])) {
+                unset($data[$campo]);
+            } else {
+                $data[$campo] = base64_encode($encrypter->encrypt($data[$campo]));
+            }
+        }
+
         $db->table('empresa')->where('id', 1)->update($data);
 
         // Auto-create/update main sede (anexo 0000)
+        $existing = $db->table('sedes')->where('empresa_id', 1)->where('anexo', '0000')->where('activo', 1)->get()->getRow();
         $sedeData = [
             'empresa_id' => 1,
             'nombre'     => 'Principal',
-            'direccion'  => $data['direccion_fiscal'] ?? '',
+            'direccion'  => $data['direccion_fiscal'] ?? ($existing->direccion ?? ''),
             'anexo'      => '0000',
-            'telefono'   => $data['telefono'] ?? '',
-            'correo'     => $data['correo'] ?? '',
+            'telefono'   => $data['telefono'] ?? ($existing->telefono ?? ''),
+            'correo'     => $data['correo'] ?? ($existing->correo ?? ''),
         ];
-        $existing = $db->table('sedes')->where('empresa_id', 1)->where('anexo', '0000')->where('activo', 1)->get()->getRow();
         if ($existing) {
             $db->table('sedes')->where('id', $existing->id)->update($sedeData);
         } else {
@@ -260,6 +270,97 @@ class Empresa extends BaseController
         return $this->response->setJSON([
             'success' => true,
             'message' => 'Correlativo eliminado correctamente.',
+        ]);
+    }
+
+    public function listarCuentas()
+    {
+        $db = \Config\Database::connect();
+        $rows = $db->table('cuentas_bancarias')->where('empresa_id', 1)->where('activo', 1)->orderBy('orden')->orderBy('banco')->get()->getResult();
+
+        $tipoBadges = [
+            'corriente' => 'badge-soft-info',
+            'ahorros'   => 'badge-soft-success',
+        ];
+
+        $data = [];
+        foreach ($rows as $r) {
+            $acciones = '<button class="btn btn-sm btn-soft-info editar-cuenta" data-id="' . $r->id . '" title="Editar">'
+                . '<i data-lucide="pencil" style="width:14px;height:14px;"></i></button> '
+                . '<button class="btn btn-sm btn-soft-danger eliminar-cuenta" data-id="' . $r->id . '" title="Eliminar">'
+                . '<i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>';
+
+            $tipo = '<span class="badge ' . ($tipoBadges[$r->tipo_cuenta] ?? 'badge-soft-secondary') . '">' . ucfirst($r->tipo_cuenta) . '</span>';
+
+            $data[] = [
+                esc($r->banco),
+                $tipo,
+                $r->moneda,
+                esc($r->numero_cuenta),
+                esc($r->numero_cci ?: '—'),
+                $acciones,
+                $r->id,
+            ];
+        }
+
+        return $this->response->setJSON(['data' => $data]);
+    }
+
+    public function obtenerCuenta($id)
+    {
+        $db = \Config\Database::connect();
+        $row = $db->table('cuentas_bancarias')->where('id', $id)->get()->getRow();
+        if (!$row) {
+            return $this->response->setJSON(['error' => 'Cuenta no encontrada.']);
+        }
+        return $this->response->setJSON($row);
+    }
+
+    public function guardarCuenta()
+    {
+        $db = \Config\Database::connect();
+        $data = $this->request->getPost();
+        unset($data['id']);
+        $data['empresa_id'] = 1;
+        $db->table('cuentas_bancarias')->insert($data);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Cuenta bancaria guardada correctamente.',
+        ]);
+    }
+
+    public function actualizarCuenta($id)
+    {
+        $db = \Config\Database::connect();
+        $row = $db->table('cuentas_bancarias')->where('id', $id)->get()->getRow();
+        if (!$row) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cuenta no encontrada.']);
+        }
+
+        $data = $this->request->getPost();
+        unset($data['id']);
+        $db->table('cuentas_bancarias')->where('id', $id)->update($data);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Cuenta bancaria actualizada correctamente.',
+        ]);
+    }
+
+    public function eliminarCuenta($id)
+    {
+        $db = \Config\Database::connect();
+        $row = $db->table('cuentas_bancarias')->where('id', $id)->get()->getRow();
+        if (!$row) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Cuenta no encontrada.']);
+        }
+
+        $db->table('cuentas_bancarias')->where('id', $id)->update(['activo' => 0]);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Cuenta bancaria eliminada correctamente.',
         ]);
     }
 }
