@@ -252,4 +252,35 @@ class ApiFacturacion extends BaseController
             'data' => $rows,
         ]);
     }
+
+    public function marcarEnviadoWhatsapp($id)
+    {
+        $db = \Config\Database::connect();
+        $body = $this->request->getJSON(true) ?? [];
+        $valor = strtoupper(trim($body['enviado_whatsapp'] ?? ''));
+
+        if (!in_array($valor, ['SI', 'NO'], true)) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'success' => false,
+                'message' => "El campo enviado_whatsapp debe ser 'SI' o 'NO'.",
+            ]);
+        }
+
+        $comprobante = $db->table('comprobantes_emitidos')->where('id', $id)->get()->getRow();
+        if (!$comprobante) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'success' => false,
+                'message' => 'Comprobante no encontrado.',
+            ]);
+        }
+
+        $db->table('comprobantes_emitidos')->where('id', $id)->update(['enviado_whatsapp' => $valor]);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Estado de envío por WhatsApp actualizado.',
+            'id' => (int) $id,
+            'enviado_whatsapp' => $valor,
+        ]);
+    }
 }
