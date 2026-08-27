@@ -166,7 +166,10 @@
         var fd = new FormData(form);
 
         fetch(url, { method: 'POST', body: fd })
-            .then(function (r) { return r.json(); })
+            .then(function (r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
             .then(function (res) {
                 if (res.success) {
                     bsModal.hide();
@@ -181,7 +184,7 @@
                 }
             })
             .catch(function () {
-                mostrarAlerta('Error de conexión.', 'danger');
+                mostrarAlerta('Error del servidor. Revisá el log en writable/logs.', 'danger');
                 btnGuardar.disabled = false;
                 spinner.classList.add('d-none');
             });

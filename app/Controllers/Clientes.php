@@ -152,6 +152,13 @@ class Clientes extends BaseController
 
         $db->transComplete();
 
+        if ($db->transStatus() === false) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'No se pudo registrar el cliente.',
+            ]);
+        }
+
         return $this->response->setJSON([
             'success' => true,
             'message' => 'Cliente registrado correctamente.',
@@ -216,6 +223,13 @@ class Clientes extends BaseController
         }
 
         $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'No se pudo actualizar el cliente.',
+            ]);
+        }
 
         return $this->response->setJSON([
             'success' => true,

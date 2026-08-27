@@ -50,4 +50,29 @@ class ClienteModel extends Model
 
     protected $skipValidation       = false;
     protected $cleanValidationRules = true;
+
+    protected $beforeInsert = ['nullificarVacios'];
+    protected $beforeUpdate = ['nullificarVacios'];
+
+    /**
+     * Los selects opcionales del formulario envían '' cuando no se elige nada.
+     * MySQL convierte esa cadena a 0 en las columnas numéricas y rompe las
+     * foreign keys, y en las de fecha la guarda como '0000-00-00'.
+     */
+    protected function nullificarVacios(array $data): array
+    {
+        $nullables = [
+            'ruc', 'ubigeo_id', 'regimen_actual_id',
+            'usuario_registro_id', 'usuario_id_eliminado',
+            'fecha_constitucion', 'fecha_baja',
+        ];
+
+        foreach ($nullables as $campo) {
+            if (($data['data'][$campo] ?? null) === '') {
+                $data['data'][$campo] = null;
+            }
+        }
+
+        return $data;
+    }
 }
