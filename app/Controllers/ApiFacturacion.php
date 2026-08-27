@@ -229,4 +229,27 @@ class ApiFacturacion extends BaseController
             'detalle_omitidos' => $omitidos,
         ]);
     }
+
+    public function pendientesWhatsapp()
+    {
+        $db = \Config\Database::connect();
+
+        $rows = $db->query("
+            SELECT
+                c.id, c.serie, c.numero, c.fecha_emision, c.moneda, c.total,
+                c.estado_sunat, c.pdf_url,
+                cl.id AS cliente_id, cl.ruc AS cliente_ruc,
+                cl.razon_social AS cliente_razon_social, cl.telefono AS cliente_telefono
+            FROM comprobantes_emitidos c
+            LEFT JOIN clientes cl ON cl.id = c.cliente_id
+            WHERE c.enviado_whatsapp = 'NO'
+            ORDER BY c.fecha_emision ASC, c.id ASC
+        ")->getResult();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'total' => count($rows),
+            'data' => $rows,
+        ]);
+    }
 }
