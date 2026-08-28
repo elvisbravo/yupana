@@ -268,6 +268,7 @@ $routes->group('api/facturacion', ['filter' => 'apitoken'], function ($routes) {
 });
 $routes->get('api/facturacion/pendientes-whatsapp', 'ApiFacturacion::pendientesWhatsapp');
 $routes->post('api/facturacion/enviado-whatsapp/(:num)', 'ApiFacturacion::marcarEnviadoWhatsapp/$1');
+$routes->post('api/facturacion/mensajes-whatsapp', 'ApiFacturacion::registrarMensajeWhatsapp');
 
 $routes->get('/solicitudes', 'Solicitudes::index');
 $routes->get('/solicitudes/listar', 'Solicitudes::listar');

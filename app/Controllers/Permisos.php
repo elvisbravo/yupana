@@ -54,7 +54,7 @@ class Permisos extends BaseController
     public function guardar()
     {
         $rolId = $this->request->getPost('rol_id');
-        $modulos = $this->request->getPost('modulos');
+        $modulos = json_decode($this->request->getPost('modulos'), true) ?? [];
 
         if (!$rolId) {
             return $this->response->setJSON([

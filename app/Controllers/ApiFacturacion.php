@@ -283,4 +283,45 @@ class ApiFacturacion extends BaseController
             'enviado_whatsapp' => $valor,
         ]);
     }
+
+    public function registrarMensajeWhatsapp()
+    {
+        $db = \Config\Database::connect();
+        $body = $this->request->getJSON(true) ?? [];
+
+        $facturaId = (int) ($body['factura_id'] ?? 0);
+        $clienteId = (int) ($body['cliente_id'] ?? 0);
+        $telefono = trim((string) ($body['cliente_telefono'] ?? ''));
+        $mensaje = trim((string) ($body['mensaje'] ?? ''));
+
+        if ($facturaId <= 0 || $clienteId <= 0 || $telefono === '' || $mensaje === '') {
+            return $this->response->setStatusCode(422)->setJSON([
+                'success' => false,
+                'message' => 'factura_id, cliente_id, cliente_telefono y mensaje son obligatorios.',
+            ]);
+        }
+
+        if (strlen($telefono) > 15) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'success' => false,
+                'message' => 'cliente_telefono no debe superar los 15 caracteres.',
+            ]);
+        }
+
+        $insert = [
+            'factura_id' => $facturaId,
+            'cliente_id' => $clienteId,
+            'cliente_telefono' => $telefono,
+            'mensaje' => $mensaje,
+            'fecha_envio' => $body['fecha_envio'] ?? date('Y-m-d H:i:s'),
+        ];
+
+        $db->table('facturas_mensajes_whatsapp')->insert($insert);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Registro de mensaje de WhatsApp guardado correctamente.',
+            'id' => $db->insertID(),
+        ]);
+    }
 }

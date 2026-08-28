@@ -23,9 +23,10 @@ class ModuloModel extends Model
     protected $useTimestamps = true;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at';
+    protected $updatedField  = '';
 
     protected $validationRules = [
+        'id'      => 'permit_empty',
         'codigo'  => 'required|max_length[80]|is_unique[modulos.codigo,id,{id}]',
         'nombre'  => 'required|max_length[120]',
         'icono'   => 'permit_empty|max_length[60]',
@@ -47,4 +48,20 @@ class ModuloModel extends Model
 
     protected $skipValidation       = false;
     protected $cleanValidationRules = true;
+
+    protected $beforeInsert = ['nullificarVacios'];
+    protected $beforeUpdate = ['nullificarVacios'];
+
+    /**
+     * El select "Módulo Padre" envía '' cuando se deja en "Ninguno (es padre)".
+     * MySQL convierte esa cadena a 0 en padre_id y rompe la FK autorreferenciada.
+     */
+    protected function nullificarVacios(array $data): array
+    {
+        if (($data['data']['padre_id'] ?? null) === '') {
+            $data['data']['padre_id'] = null;
+        }
+
+        return $data;
+    }
 }
