@@ -208,6 +208,20 @@ class Comprobantes extends BaseController
         return $this->response->setJSON($resultado);
     }
 
+    public function regenerarPdf($id)
+    {
+        try {
+            $resultado = (new \App\Libraries\ComprobantePdf())->generar((int) $id);
+        } catch (\Throwable $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'mensaje' => 'No se pudo generar el PDF: ' . $e->getMessage(),
+            ]);
+        }
+
+        return $this->response->setJSON($resultado);
+    }
+
     public function guardarClienteRapido()
     {
         $db = \Config\Database::connect();
