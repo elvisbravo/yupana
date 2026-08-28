@@ -40,7 +40,7 @@ $routes->get('/comprobantes/obtener-cliente', 'Comprobantes::obtenerCliente');
 $routes->post('/comprobantes/guardar', 'Comprobantes::guardar');
 $routes->post('/comprobantes/guardar-cliente', 'Comprobantes::guardarClienteRapido');
 $routes->post('/comprobantes/enviar-sunat/(:num)', 'Comprobantes::enviarSunat/$1');
-$routes->post('/comprobantes/regenerar-pdf/(:num)', 'Comprobantes::regenerarPdf/$1');
+$routes->get('/comprobantes/regenerar-pdf/(:num)', 'Comprobantes::regenerarPdf/$1');
 
 $routes->get('/tarifas', 'TarifasMensuales::index');
 $routes->get('/tarifas/mensuales', 'TarifasMensuales::index');
