@@ -3,11 +3,33 @@
 
     var filtroPeriodo = document.getElementById('filtroPeriodoCron');
     var titulo = document.getElementById('tituloGenerado');
+    var montoTotalEl = document.getElementById('montoTotalGenerado');
 
     function actualizarTitulo() {
         var periodo = filtroPeriodo.value;
         var label = (typeof PERIODOS_LABELS !== 'undefined' && PERIODOS_LABELS[periodo]) ? PERIODOS_LABELS[periodo] : periodo;
         titulo.textContent = 'Facturas Generadas — Período: ' + label;
+    }
+
+    var SIMBOLOS_MONEDA = { PEN: 'S/', USD: '$' };
+
+    function actualizarMontoTotal(rows) {
+        var totales = {};
+        (rows || []).forEach(function (row) {
+            var moneda = row[9] || 'PEN';
+            var monto = parseFloat(String(row[8]).replace(/,/g, '')) || 0;
+            totales[moneda] = (totales[moneda] || 0) + monto;
+        });
+
+        var monedas = Object.keys(totales);
+        if (monedas.length === 0) {
+            montoTotalEl.textContent = 'S/ 0.00';
+            return;
+        }
+        montoTotalEl.textContent = monedas.map(function (m) {
+            var simbolo = SIMBOLOS_MONEDA[m] || m;
+            return simbolo + ' ' + totales[m].toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }).join(' + ');
     }
 
     var tabla = new DataTable('#tablaGeneradas', {
@@ -16,8 +38,14 @@
             if (filtroPeriodo.value) params.set('periodo', filtroPeriodo.value);
             fetch('/comprobantes/ventas/listar?' + params.toString())
                 .then(function (r) { return r.json(); })
-                .then(function (res) { cb(res); })
-                .catch(function () { cb({ data: [] }); });
+                .then(function (res) {
+                    actualizarMontoTotal(res.data);
+                    cb(res);
+                })
+                .catch(function () {
+                    actualizarMontoTotal([]);
+                    cb({ data: [] });
+                });
         },
         responsive: true,
         order: [[2, 'desc']],

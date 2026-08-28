@@ -12,16 +12,22 @@
             <h4 class="fw-bold" id="tituloGenerado">Facturas Generadas</h4>
             <p class="text-muted mb-0">Comprobantes emitidos automáticamente por el cron, agrupados por período</p>
         </div>
-        <div>
-            <label class="form-label mb-0 fs-xxs">Período</label>
-            <select class="form-select form-select-sm" id="filtroPeriodoCron" style="width:160px;">
-                <?php if (empty($periodos)): ?>
-                <option value="<?= esc($defaultPeriodo) ?>"><?= esc($defaultPeriodo) ?></option>
-                <?php endif; ?>
-                <?php foreach ($periodos as $p): ?>
-                <option value="<?= esc($p->periodo) ?>" <?= $p->periodo === $defaultPeriodo ? 'selected' : '' ?>><?= esc($periodosLabels[$p->periodo]) ?></option>
-                <?php endforeach; ?>
-            </select>
+        <div class="d-flex align-items-end gap-3">
+            <div>
+                <label class="form-label mb-0 fs-xxs">Monto Total</label>
+                <p class="fw-bold fs-4 mb-0" id="montoTotalGenerado">—</p>
+            </div>
+            <div>
+                <label class="form-label mb-0 fs-xxs">Período</label>
+                <select class="form-select form-select-sm" id="filtroPeriodoCron" style="width:160px;">
+                    <?php if (empty($periodos)): ?>
+                    <option value="<?= esc($defaultPeriodo) ?>"><?= esc($defaultPeriodo) ?></option>
+                    <?php endif; ?>
+                    <?php foreach ($periodos as $p): ?>
+                    <option value="<?= esc($p->periodo) ?>" <?= $p->periodo === $defaultPeriodo ? 'selected' : '' ?>><?= esc($periodosLabels[$p->periodo]) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
         </div>
     </div>
 </div>
