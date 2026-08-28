@@ -293,11 +293,12 @@ class ApiFacturacion extends BaseController
         $clienteId = (int) ($body['cliente_id'] ?? 0);
         $telefono = trim((string) ($body['cliente_telefono'] ?? ''));
         $mensaje = trim((string) ($body['mensaje'] ?? ''));
+        $enviado = trim((string) ($body['enviado'] ?? ''));
 
-        if ($facturaId <= 0 || $clienteId <= 0 || $telefono === '' || $mensaje === '') {
+        if ($facturaId <= 0 || $clienteId <= 0 || $telefono === '' || $mensaje === '' || $enviado === '') {
             return $this->response->setStatusCode(422)->setJSON([
                 'success' => false,
-                'message' => 'factura_id, cliente_id, cliente_telefono y mensaje son obligatorios.',
+                'message' => 'factura_id, cliente_id, cliente_telefono, mensaje y enviado son obligatorios.',
             ]);
         }
 
@@ -308,11 +309,19 @@ class ApiFacturacion extends BaseController
             ]);
         }
 
+        if (strlen($enviado) > 20) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'success' => false,
+                'message' => 'enviado no debe superar los 20 caracteres.',
+            ]);
+        }
+
         $insert = [
             'factura_id' => $facturaId,
             'cliente_id' => $clienteId,
             'cliente_telefono' => $telefono,
             'mensaje' => $mensaje,
+            'enviado' => $enviado,
             'fecha_envio' => $body['fecha_envio'] ?? date('Y-m-d H:i:s'),
         ];
 

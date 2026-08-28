@@ -270,6 +270,9 @@ $routes->get('api/facturacion/pendientes-whatsapp', 'ApiFacturacion::pendientesW
 $routes->post('api/facturacion/enviado-whatsapp/(:num)', 'ApiFacturacion::marcarEnviadoWhatsapp/$1');
 $routes->post('api/facturacion/mensajes-whatsapp', 'ApiFacturacion::registrarMensajeWhatsapp');
 
+$routes->get('/whatsapp-recordatorio-pagos', 'WhatsappRecordatorios::index');
+$routes->get('/whatsapp-recordatorio-pagos/listar', 'WhatsappRecordatorios::listar');
+
 $routes->get('/solicitudes', 'Solicitudes::index');
 $routes->get('/solicitudes/listar', 'Solicitudes::listar');
 $routes->get('/solicitudes/obtener/(:num)', 'Solicitudes::obtener/$1');
