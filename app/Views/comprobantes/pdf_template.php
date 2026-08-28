@@ -61,7 +61,7 @@ $esCron = $comprobante->origen === 'cron';
             <?php if ($logoDataUri): ?>
             <img src="<?= $logoDataUri ?>" style="max-height:50px;max-width:180px;"><br>
             <?php endif; ?>
-            <div class="empresa-nombre"><?= esc($empresa->nombre_comercial ?: $empresa->razon_social) ?></div>
+            
             <div class="empresa-detalle"><?= esc($empresa->razon_social) ?></div>
             <div class="empresa-detalle"><?= esc($sede->direccion ?? $empresa->direccion_fiscal ?? '') ?></div>
         </td>
