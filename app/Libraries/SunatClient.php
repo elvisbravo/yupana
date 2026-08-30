@@ -95,7 +95,7 @@ class SunatClient
                 'forma_pago' => $comprobante->forma_pago,
                 'total_letras' => $numeroALetras->convertir((float) $comprobante->total, $comprobante->moneda),
             ],
-            'detalle_item' => array_map(static fn ($item) => [
+            'detalle_item' => array_map(static fn($item) => [
                 'codigo' => $item['codigo'] ?? 'P001',
                 'descripcion' => $item['descripcion'],
                 'unidad' => $item['unidad'] ?? 'ZZ',
@@ -112,6 +112,9 @@ class SunatClient
             $response = $client->request('POST', $baseUrl . '/api/' . $ruta, [
                 'json' => $payload,
                 'http_errors' => false,
+                'headers'     => [
+                    'X-API-Key' => env('SUNAT_API_KEY'),
+                ],
             ]);
         } catch (\Exception $e) {
             return $this->fallar($db, $comprobante, 'Error de conexión con facturación electrónica: ' . $e->getMessage());
@@ -174,7 +177,7 @@ class SunatClient
 
     private function nombreArchivo($comprobante): string
     {
-        $limpio = static fn ($v) => preg_replace('/[^A-Za-z0-9\-]/', '', (string) $v);
+        $limpio = static fn($v) => preg_replace('/[^A-Za-z0-9\-]/', '', (string) $v);
         return $limpio($comprobante->serie) . '-' . $limpio($comprobante->numero);
     }
 }
