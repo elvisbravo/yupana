@@ -362,3 +362,5 @@
             '<button type="button" class="btn-close py-2" data-bs-dismiss="alert"></button></div>';
     }
 })();
+
+//clientes
