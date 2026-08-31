@@ -292,5 +292,5 @@
     <script src="<?= base_url() ?>assets/plugins/datatables/jszip.min.js"></script>
     <script src="<?= base_url() ?>assets/plugins/datatables/buttons.html5.min.js"></script>
     <script src="<?= base_url() ?>assets/plugins/choices/choices.min.js"></script>
-    <script src="<?= base_url() ?>js/clientes.js"></script>
+    <script src="<?= base_url() ?>js/clientes.js?v=1.0"></script>
 <?= $this->endSection() ?>
