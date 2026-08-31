@@ -1,15 +1,32 @@
 (function () {
     'use strict';
 
+    // Ordena el RUC por su ultimo digito (0,1,2,...,9) en vez de alfabeticamente.
+    DataTable.ext.type.order['ruc-ultimo-digito-pre'] = function (data) {
+        var str = (data || '').toString().trim();
+        var ultimo = str.slice(-1);
+        var n = parseInt(ultimo, 10);
+        return isNaN(n) ? 10 : n;
+    };
+
     var tabla = new DataTable('#tablaClientes', {
         ajax: '/clientes/listar',
         responsive: true,
-        order: [[0, 'desc']],
+        order: [[0, 'asc']],
         pageLength: 25,
         lengthMenu: [10, 25, 50, 100],
-        dom: "<'d-md-flex justify-content-between align-items-center my-2'lf>rt<'d-md-flex justify-content-between align-items-center mt-2'ip>",
+        dom: "<'d-md-flex justify-content-between align-items-center my-2'Blf>rt<'d-md-flex justify-content-between align-items-center mt-2'ip>",
+        buttons: [
+            {
+                extend: 'excelHtml5',
+                text: 'Exportar Excel',
+                className: 'btn btn-sm btn-soft-success',
+                title: 'Clientes',
+                exportOptions: { columns: [0, 1, 2, 3, 4, 5] },
+            },
+        ],
         columns: [
-            { data: 0 },
+            { data: 0, type: 'ruc-ultimo-digito' },
             { data: 1 },
             { data: 2 },
             { data: 3 },

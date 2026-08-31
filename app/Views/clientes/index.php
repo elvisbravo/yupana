@@ -2,6 +2,7 @@
 
 <?= $this->section('styles') ?>
     <link href="<?= base_url() ?>assets/plugins/datatables/responsive.bootstrap5.min.css" rel="stylesheet" type="text/css">
+    <link href="<?= base_url() ?>assets/plugins/datatables/buttons.bootstrap5.min.css" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
 <?= $this->endSection() ?>
 
@@ -28,7 +29,7 @@
                         <tr>
                             <th>RUC</th>
                             <th>Cliente</th>
-                            <th>Email</th>
+                            <th>Teléfono</th>
                             <th>Tarifa Actual</th>
                             <th>Régimen</th>
                             <th>Estado</th>
@@ -286,6 +287,10 @@
     <script src="<?= base_url() ?>assets/plugins/datatables/dataTables.bootstrap5.min.js"></script>
     <script src="<?= base_url() ?>assets/plugins/datatables/dataTables.responsive.min.js"></script>
     <script src="<?= base_url() ?>assets/plugins/datatables/responsive.bootstrap5.min.js"></script>
+    <script src="<?= base_url() ?>assets/plugins/datatables/dataTables.buttons.min.js"></script>
+    <script src="<?= base_url() ?>assets/plugins/datatables/buttons.bootstrap5.min.js"></script>
+    <script src="<?= base_url() ?>assets/plugins/datatables/jszip.min.js"></script>
+    <script src="<?= base_url() ?>assets/plugins/datatables/buttons.html5.min.js"></script>
     <script src="<?= base_url() ?>assets/plugins/choices/choices.min.js"></script>
     <script src="<?= base_url() ?>js/clientes.js"></script>
 <?= $this->endSection() ?>

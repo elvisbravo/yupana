@@ -239,6 +239,7 @@ $routes->get('/vencimientos/consultar', 'Vencimientos::consultar');
 
 $routes->get('/empresa', 'Empresa::index');
 $routes->post('/empresa/guardar', 'Empresa::guardarEmpresa');
+$routes->post('/empresa/certificado/subir', 'Empresa::subirCertificado');
 $routes->get('/empresa/sedes/listar', 'Empresa::listarSedes');
 $routes->get('/empresa/sedes/obtener/(:num)', 'Empresa::obtenerSede/$1');
 $routes->post('/empresa/sedes/guardar', 'Empresa::guardarSede');

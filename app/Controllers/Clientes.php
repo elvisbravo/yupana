@@ -44,9 +44,6 @@ class Clientes extends BaseController
         $data = [];
         foreach ($clientes as $c) {
             $nombre = esc($c->razon_social);
-            if ($c->nombre_comercial) {
-                $nombre .= '<br><small class="text-muted">' . esc($c->nombre_comercial) . '</small>';
-            }
 
             $estados = ['activo' => 'success', 'inactivo' => 'secondary', 'suspendido' => 'warning', 'baja' => 'danger'];
             $estadoClase = $estados[$c->estado] ?? 'secondary';
@@ -72,7 +69,7 @@ class Clientes extends BaseController
             $data[] = [
                 $c->ruc ?: '—',
                 $nombre,
-                esc($c->email ?: '—'),
+                esc($c->telefono ?: '—'),
                 $tarifaHtml,
                 esc($mapa[$c->regimen_actual_id] ?? '—'),
                 $estadoHtml,

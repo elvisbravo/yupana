@@ -60,6 +60,86 @@ class Empresa extends BaseController
         ]);
     }
 
+    public function subirCertificado()
+    {
+        $db = \Config\Database::connect();
+        $ruc = trim((string) $this->request->getPost('ruc'));
+        $passwordCertificate = (string) $this->request->getPost('password_certificate');
+        $file = $this->request->getFile('certificado');
+
+        if ($ruc === '' || $passwordCertificate === '' || !$file) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'success' => false,
+                'message' => 'RUC, clave del certificado y archivo son obligatorios.',
+            ]);
+        }
+
+        if (!$file->isValid() || $file->hasMoved()) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'success' => false,
+                'message' => 'El archivo del certificado no es válido.',
+            ]);
+        }
+
+        if (strtolower($file->getClientExtension()) !== 'pfx') {
+            return $this->response->setStatusCode(422)->setJSON([
+                'success' => false,
+                'message' => 'El archivo debe tener extensión .pfx.',
+            ]);
+        }
+
+        if ($file->getSize() > 5 * 1024 * 1024) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'success' => false,
+                'message' => 'El archivo supera el tamaño máximo permitido (5MB).',
+            ]);
+        }
+
+        $curlFile = new \CURLFile($file->getTempName(), $file->getClientMimeType() ?: 'application/x-pkcs12', $file->getClientName());
+        $baseUrl = rtrim(env('SUNAT_API_URL', ''), '/');
+        $client = \Config\Services::curlrequest(['timeout' => 60]);
+
+        try {
+            $response = $client->request('POST', $baseUrl . '/api/certificados', [
+                'multipart' => [
+                    'ruc' => $ruc,
+                    'password_certificate' => $passwordCertificate,
+                    'certificado' => $curlFile,
+                ],
+                'headers' => ['X-API-Key' => env('SUNAT_API_KEY')],
+                'http_errors' => false,
+            ]);
+        } catch (\Exception $e) {
+            return $this->response->setStatusCode(502)->setJSON([
+                'success' => false,
+                'message' => 'Error de conexión con el servicio de certificados: ' . $e->getMessage(),
+            ]);
+        }
+
+        $body = json_decode($response->getBody(), true) ?? [];
+
+        if (empty($body['success'])) {
+            $mensaje = $body['messages']['error'] ?? $body['message'] ?? 'Error desconocido al subir el certificado.';
+            return $this->response->setStatusCode($response->getStatusCode())->setJSON([
+                'success' => false,
+                'message' => $mensaje,
+            ]);
+        }
+
+        $encrypter = service('encrypter');
+        $db->table('empresa')->where('id', 1)->update([
+            'password_certificate' => base64_encode($encrypter->encrypt($passwordCertificate)),
+        ]);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => $body['message'] ?? 'Certificado cargado correctamente.',
+            'titular' => $body['titular'] ?? null,
+            'valido_desde' => $body['valido_desde'] ?? null,
+            'valido_hasta' => $body['valido_hasta'] ?? null,
+        ]);
+    }
+
     public function listarSedes()
     {
         $db = \Config\Database::connect();

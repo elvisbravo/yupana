@@ -69,6 +69,55 @@
             });
     });
 
+    // ===== Certificado Digital =====
+    var btnCert = document.getElementById('btnSubirCertificado');
+    var certSpinner = btnCert.querySelector('.spinner-border');
+    var certAlert = document.getElementById('certificadoAlert');
+
+    btnCert.addEventListener('click', function () {
+        var ruc = document.getElementById('f_empresa_ruc').value.trim();
+        var passwordCertificate = empresaForm.querySelector('[name="password_certificate"]').value;
+        var file = document.getElementById('f_certificado').files[0];
+
+        certAlert.innerHTML = '';
+
+        if (!ruc) {
+            certAlert.innerHTML = '<div class="alert alert-warning py-1 fs-xxs mb-0">Ingresa el RUC en Datos Generales.</div>';
+            return;
+        }
+        if (!passwordCertificate) {
+            certAlert.innerHTML = '<div class="alert alert-warning py-1 fs-xxs mb-0">Ingresa la clave del certificado.</div>';
+            return;
+        }
+        if (!file) {
+            certAlert.innerHTML = '<div class="alert alert-warning py-1 fs-xxs mb-0">Selecciona un archivo .pfx.</div>';
+            return;
+        }
+
+        var fd = new FormData();
+        fd.append('ruc', ruc);
+        fd.append('password_certificate', passwordCertificate);
+        fd.append('certificado', file);
+
+        btnCert.disabled = true;
+        certSpinner.classList.remove('d-none');
+
+        fetch('/empresa/certificado/subir', { method: 'POST', body: fd })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                var tipo = res.success ? 'success' : 'danger';
+                var extra = res.success && res.valido_hasta ? ' Vigente hasta ' + res.valido_hasta.substring(0, 10) + '.' : '';
+                certAlert.innerHTML = '<div class="alert alert-' + tipo + ' py-1 fs-xxs mb-0">' + (res.message || 'Error al subir el certificado.') + extra + '</div>';
+            })
+            .catch(function () {
+                certAlert.innerHTML = '<div class="alert alert-danger py-1 fs-xxs mb-0">Error de conexión al subir el certificado.</div>';
+            })
+            .finally(function () {
+                btnCert.disabled = false;
+                certSpinner.classList.add('d-none');
+            });
+    });
+
     // ===== Sedes DataTable =====
     var tablaSedes = new DataTable('#tablaSedes', {
         ajax: '/empresa/sedes/listar',

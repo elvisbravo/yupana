@@ -78,6 +78,17 @@
                             <label class="form-label">Clave del Certificado <?= !empty($empresa->password_certificate) ? '<span class="text-success fs-xxs">(configurada)</span>' : '' ?></label>
                             <input type="password" class="form-control form-control-sm" name="password_certificate" autocomplete="new-password" placeholder="<?= !empty($empresa->password_certificate) ? '••••••••' : '' ?>">
                         </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Certificado Digital (.pfx)</label>
+                            <div class="input-group input-group-sm">
+                                <input type="file" class="form-control" id="f_certificado" accept=".pfx">
+                                <button type="button" class="btn btn-outline-primary" id="btnSubirCertificado">
+                                    <span class="spinner-border spinner-border-sm me-1 d-none" role="status"></span>
+                                    Subir
+                                </button>
+                            </div>
+                            <div id="certificadoAlert" class="mt-1"></div>
+                        </div>
                     </div>
 
                     <hr>
