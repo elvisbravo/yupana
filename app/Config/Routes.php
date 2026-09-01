@@ -214,6 +214,8 @@ $routes->get('/reportes/morosidad', 'ReporteMorosidad::index');
 $routes->get('/reportes/morosidad/listar', 'ReporteMorosidad::listar');
 $routes->get('/reportes/regimenes', 'ReporteRegimenes::index');
 $routes->get('/reportes/regimenes/listar', 'ReporteRegimenes::listar');
+$routes->get('/reporte-ventas', 'ReporteVentas::index');
+$routes->get('/reporte-ventas/listar', 'ReporteVentas::listar');
 
 $routes->get('/auditoria', 'Auditoria::index');
 $routes->get('/auditoria/logs', 'Auditoria::logs');

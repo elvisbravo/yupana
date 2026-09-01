@@ -62,5 +62,5 @@
     <script src="<?= base_url() ?>assets/plugins/datatables/dataTables.bootstrap5.min.js"></script>
     <script src="<?= base_url() ?>assets/plugins/datatables/dataTables.responsive.min.js"></script>
     <script src="<?= base_url() ?>assets/plugins/datatables/responsive.bootstrap5.min.js"></script>
-    <script src="<?= base_url() ?>js/facturacion_automatica_generadas.js"></script>
+    <script src="<?= base_url() ?>js/facturacion_automatica_generadas.js?v=1.0"></script>
 <?= $this->endSection() ?>

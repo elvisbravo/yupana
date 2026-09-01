@@ -66,7 +66,7 @@
             } },
             { data: 4, render: function (data, type, row) {
                 if (type !== 'display') return data;
-                return data + '<br><small class="text-muted">' + (row[5] || '') + '</small>';
+                return data + '<br><small class="text-dark fw-semibold" style="font-size: 0.95em;">' + (row[5] || '') + '</small>';
             } },
             { data: 8, className: 'text-end fw-bold' },
             { data: 13, orderable: false, className: 'text-end' },
