@@ -16,14 +16,14 @@ class ReporteVentas extends BaseController
         $rows = $db->query("
             SELECT
                 c.id, c.serie, c.numero, c.fecha_emision, c.subtotal, c.igv, c.total, c.moneda, c.estado_sunat,
-                tc.nombre AS tipo_nombre,
+                tc.nombre AS tipo_nombre, tc.codigo AS tipo_codigo,
                 cl.razon_social, cl.ruc, cl.direccion,
                 u.departamento, u.provincia, u.distrito
             FROM comprobantes_emitidos c
             JOIN tipos_comprobante tc ON tc.id = c.tipo_comprobante_id
             LEFT JOIN clientes cl ON cl.id = c.cliente_id
             LEFT JOIN ubigeos u ON u.id = cl.ubigeo_id
-            ORDER BY c.fecha_emision DESC, c.id DESC
+            ORDER BY c.fecha_emision ASC, c.serie ASC, CAST(c.numero AS UNSIGNED) ASC
         ")->getResult();
 
         $badges = [
@@ -52,6 +52,8 @@ class ReporteVentas extends BaseController
                 number_format($r->igv, 2),
                 number_format($r->total, 2) . ' ' . esc($r->moneda),
                 $estadoBadge,
+                $r->tipo_codigo,                 // [11] TD code (01, 03, 07…)
+                number_format($r->total, 2),     // [12] Total numérico puro
             ];
         }
 
