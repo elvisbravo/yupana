@@ -101,6 +101,8 @@ class Usuarios extends BaseController
         $data = $this->request->getPost();
         $data['password_hash'] = password_hash($password, PASSWORD_BCRYPT);
         unset($data['password']);
+        if (empty($data['dni']))     $data['dni']     = null;
+        if (empty($data['telefono'])) $data['telefono'] = null;
 
         $model->save($data);
 
@@ -136,6 +138,8 @@ class Usuarios extends BaseController
         $data = $this->request->getPost();
         $password = $data['password'] ?? '';
         unset($data['password']);
+        if (empty($data['dni']))      $data['dni']      = null;
+        if (empty($data['telefono'])) $data['telefono'] = null;
 
         if ($password) {
             $data['password_hash'] = password_hash($password, PASSWORD_BCRYPT);

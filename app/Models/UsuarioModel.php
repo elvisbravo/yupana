@@ -26,6 +26,7 @@ class UsuarioModel extends Model
     protected $updatedField  = 'updated_at';
 
     protected $validationRules = [
+        'id'      => 'permit_empty',
         'rol_id'  => 'required|is_natural_no_zero',
         'nombres' => 'required|max_length[120]',
         'apellidos' => 'required|max_length[120]',
