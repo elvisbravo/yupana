@@ -25,6 +25,7 @@ class Comprobantes extends BaseController
         $periodo = $this->request->getGet('periodo');
         $anio = $this->request->getGet('anio');
         $origen = $this->request->getGet('origen');
+        $tipoEnvio = $this->request->getGet('tipo_envio');
 
         $sql = "
             SELECT c.*, tc.nombre as tipo_nombre, tc.abreviatura, tc.codigo as tipo_codigo, cl.razon_social, cl.ruc
@@ -38,6 +39,7 @@ class Comprobantes extends BaseController
         if ($periodo) { $sql .= " AND c.periodo = ?"; $params[] = $periodo; }
         if ($anio) { $sql .= " AND YEAR(c.fecha_emision) = ?"; $params[] = $anio; }
         if ($origen) { $sql .= " AND c.origen = ?"; $params[] = $origen; }
+        if ($tipoEnvio) { $sql .= " AND c.tipo_envio_sunat = ?"; $params[] = $tipoEnvio; }
         $sql .= " ORDER BY c.fecha_emision DESC, c.id DESC LIMIT 1000";
 
         $rows = $db->query($sql, $params)->getResult();
@@ -63,21 +65,35 @@ class Comprobantes extends BaseController
             $sunatBadge = '<span class="badge ' . ($badges[$r->estado_sunat] ?? 'badge-soft-secondary') . '">' . ucfirst($r->estado_sunat) . '</span>';
             $pagoBadge = '<span class="badge ' . ($pagoBadges[$r->estado_pago] ?? 'badge-soft-secondary') . '">' . ucfirst(str_replace('_', ' ', $r->estado_pago)) . '</span>';
 
-            $acciones = '';
-            if (in_array($r->estado_sunat, ['pendiente', 'rechazado'], true) && in_array($r->tipo_codigo, $tiposSoportados, true)) {
-                $titulo = $r->sunat_mensaje ? esc($r->sunat_mensaje, 'attr') : 'Enviar a SUNAT';
-                $acciones .= '<button class="btn btn-sm btn-soft-primary enviar-sunat" data-id="' . $r->id . '" title="' . $titulo . '">'
-                    . '<i data-lucide="send" style="width:14px;height:14px;"></i></button> ';
-            }
+            $archivos = '';
             if (!empty($r->pdf_url)) {
-                $acciones .= '<a class="btn btn-sm btn-soft-danger" href="' . base_url($r->pdf_url) . '" target="_blank" title="Ver PDF">PDF</a> ';
+                $archivos .= '<a class="btn btn-sm btn-soft-danger" href="' . base_url($r->pdf_url) . '" target="_blank" title="Ver PDF">PDF</a> ';
             }
             if (!empty($r->xml_url)) {
-                $acciones .= '<a class="btn btn-sm btn-soft-secondary" href="' . base_url($r->xml_url) . '" download title="Descargar XML">XML</a> ';
+                $archivos .= '<a class="btn btn-sm btn-soft-secondary" href="' . base_url($r->xml_url) . '" download title="Descargar XML">XML</a> ';
             }
             if (!empty($r->cdr_url)) {
-                $acciones .= '<a class="btn btn-sm btn-soft-secondary" href="' . base_url($r->cdr_url) . '" download title="Descargar CDR">CDR</a>';
+                $archivos .= '<a class="btn btn-sm btn-soft-secondary" href="' . base_url($r->cdr_url) . '" download title="Descargar CDR">CDR</a>';
             }
+
+            $acciones = '<div class="dropdown">'
+                . '<button class="btn btn-sm btn-soft-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i data-lucide="more-horizontal" style="width:14px;height:14px;"></i></button>'
+                . '<ul class="dropdown-menu dropdown-menu-end">';
+            if (in_array($r->estado_sunat, ['pendiente', 'rechazado'], true) && in_array($r->tipo_codigo, $tiposSoportados, true)) {
+                $titulo = $r->sunat_mensaje ? esc($r->sunat_mensaje, 'attr') : 'Enviar a SUNAT';
+                $acciones .= '<li><a class="dropdown-item enviar-sunat" href="#" data-id="' . $r->id . '" title="' . $titulo . '">'
+                    . '<i data-lucide="send" class="me-2" style="width:14px;height:14px;"></i>Enviar a SUNAT</a></li>';
+            }
+            if (in_array($r->tipo_codigo, ['01', '03'], true) && $r->estado_sunat === 'aceptado') {
+                $acciones .= '<li><a class="dropdown-item" href="' . base_url('comprobantes/nota-credito/' . $r->id) . '">'
+                    . '<i data-lucide="file-plus" class="me-2" style="width:14px;height:14px;"></i>Generar nota de crédito</a></li>';
+            } else {
+                $acciones .= '<li><a class="dropdown-item disabled" href="#" aria-disabled="true" tabindex="-1" title="Solo disponible para facturas/boletas aceptadas">'
+                    . '<i data-lucide="file-plus" class="me-2" style="width:14px;height:14px;"></i>Generar nota de crédito</a></li>';
+            }
+            $acciones .= '<li><a class="dropdown-item disabled" href="#" aria-disabled="true" tabindex="-1" title="Próximamente">'
+                . '<i data-lucide="ban" class="me-2" style="width:14px;height:14px;"></i>Anular comprobante</a></li>';
+            $acciones .= '</ul></div>';
 
             $data[] = [
                 $r->serie . '-' . $r->numero,
@@ -93,7 +109,8 @@ class Comprobantes extends BaseController
                 $sunatBadge,
                 $pagoBadge,
                 esc($r->observaciones ?? '—'),
-                $acciones ?: '—',
+                $archivos ?: '—',
+                $acciones,
             ];
         }
 
@@ -162,10 +179,13 @@ class Comprobantes extends BaseController
             return $this->response->setJSON(['success' => false, 'errors' => $this->validator->getErrors()]);
         }
 
+        $sedeId = $data['sede_id'] ?? null;
+        $sede = $sedeId ? $db->table('sedes')->where('id', $sedeId)->get()->getRow() : null;
+
         $insert = [
             'tipo_comprobante_id' => $data['tipo_comprobante_id'],
             'cliente_id' => $data['cliente_id'],
-            'sede_id' => $data['sede_id'] ?? null,
+            'sede_id' => $sedeId,
             'serie' => $data['serie'],
             'numero' => $data['numero'],
             'fecha_emision' => $data['fecha_emision'],
@@ -181,6 +201,7 @@ class Comprobantes extends BaseController
             'observaciones' => $data['observaciones'] ?? null,
             'detalle' => $data['detalle'] ?? null,
             'usuario_id' => session('usuario_id'),
+            'tipo_envio_sunat' => $sede->tipo_envio ?? 'prueba',
         ];
 
         if ($insert['detalle']) {
@@ -296,5 +317,125 @@ class Comprobantes extends BaseController
             ->get()->getResult();
 
         return $this->response->setJSON($rows);
+    }
+
+    public function notaCredito($id)
+    {
+        $db = \Config\Database::connect();
+        $comprobante = $db->query("
+            SELECT c.*, tc.nombre as tipo_nombre, tc.codigo as tipo_codigo, cl.razon_social, cl.ruc
+            FROM comprobantes_emitidos c
+            JOIN tipos_comprobante tc ON tc.id = c.tipo_comprobante_id
+            LEFT JOIN clientes cl ON cl.id = c.cliente_id
+            WHERE c.id = ?
+        ", [$id])->getRow();
+
+        if (!$comprobante || !in_array($comprobante->tipo_codigo, ['01', '03'], true) || $comprobante->estado_sunat !== 'aceptado') {
+            return redirect()->to('/comprobantes/ventas');
+        }
+
+        $data['comprobante'] = $comprobante;
+        $data['items'] = json_decode($comprobante->detalle ?? '[]', true) ?: [];
+        $data['motivos'] = $db->table('motivos_nota_credito')->where('activo', 1)->orderBy('codigo')->get()->getResult();
+
+        return view('comprobantes/nota_credito', $data);
+    }
+
+    public function guardarNotaCredito()
+    {
+        $db = \Config\Database::connect();
+        $data = $this->request->getPost();
+
+        $rules = [
+            'comprobante_referencia_id' => 'required|integer',
+            'motivo_nota_credito_id' => 'required|integer',
+        ];
+        if (!$this->validate($rules)) {
+            return $this->response->setJSON(['success' => false, 'errors' => $this->validator->getErrors()]);
+        }
+
+        $original = $db->query("
+            SELECT c.*, tc.codigo as tipo_codigo
+            FROM comprobantes_emitidos c
+            JOIN tipos_comprobante tc ON tc.id = c.tipo_comprobante_id
+            WHERE c.id = ?
+        ", [$data['comprobante_referencia_id']])->getRow();
+
+        if (!$original || !in_array($original->tipo_codigo, ['01', '03'], true) || $original->estado_sunat !== 'aceptado') {
+            return $this->response->setJSON(['success' => false, 'message' => 'El comprobante original no es válido para generar una nota de crédito.']);
+        }
+
+        $motivo = $db->table('motivos_nota_credito')->where('id', $data['motivo_nota_credito_id'])->where('activo', 1)->get()->getRow();
+        if (!$motivo) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Motivo no válido.']);
+        }
+
+        $tipoNC = $db->table('tipos_comprobante')->where('codigo', '07')->get()->getRow();
+        if (!$tipoNC) {
+            return $this->response->setJSON(['success' => false, 'message' => 'No existe el tipo de comprobante "Nota de Crédito" en el catálogo.']);
+        }
+
+        $sede = $original->sede_id ? $db->table('sedes')->where('id', $original->sede_id)->get()->getRow() : null;
+
+        $db->transStart();
+
+        $correlativo = $db->query("
+            SELECT * FROM correlativos
+            WHERE sede_id = ? AND tipo_comprobante_id = ? AND activo = 1
+            ORDER BY serie ASC LIMIT 1 FOR UPDATE
+        ", [$original->sede_id, $tipoNC->id])->getRow();
+
+        if (!$correlativo) {
+            $db->transComplete();
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'No hay un correlativo activo configurado para Nota de Crédito en la sede del comprobante original.',
+            ]);
+        }
+
+        $numero = (int) $correlativo->correlativo_actual;
+        $db->query('UPDATE correlativos SET correlativo_actual = correlativo_actual + 1 WHERE id = ?', [$correlativo->id]);
+
+        $fechaEmision = (new \DateTime('now', new \DateTimeZone('America/Lima')))->format('Y-m-d');
+
+        $db->table('comprobantes_emitidos')->insert([
+            'cliente_id' => $original->cliente_id,
+            'comprobante_referencia_id' => $original->id,
+            'motivo_nota_credito_id' => $motivo->id,
+            'sede_id' => $original->sede_id,
+            'tipo_comprobante_id' => $tipoNC->id,
+            'serie' => $correlativo->serie,
+            'numero' => str_pad((string) $numero, 8, '0', STR_PAD_LEFT),
+            'fecha_emision' => $fechaEmision,
+            'fecha_vencimiento' => $fechaEmision,
+            'forma_pago' => 'CONTADO',
+            'periodo' => date('Y-m', strtotime($fechaEmision)),
+            'moneda' => $original->moneda,
+            'subtotal' => $original->subtotal,
+            'igv' => $original->igv,
+            'total' => $original->total,
+            'detalle' => $original->detalle,
+            'estado_sunat' => 'pendiente',
+            'estado_pago' => 'no_pagado',
+            'origen' => 'manual',
+            'usuario_id' => session('usuario_id'),
+            'tipo_envio_sunat' => $sede->tipo_envio ?? 'prueba',
+        ]);
+
+        $comprobanteId = $db->insertID();
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'No se pudo generar la nota de crédito (posible número duplicado); revisar correlativos.',
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Nota de crédito generada correctamente.',
+            'id' => $comprobanteId,
+        ]);
     }
 }

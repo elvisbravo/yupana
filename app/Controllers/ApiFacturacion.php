@@ -65,17 +65,27 @@ class ApiFacturacion extends BaseController
             ]);
         }
 
+        $sede = $db->table('sedes')->where('id', $cfg->sede_id)->get()->getRow();
+
         // Clientes activos con una tarifa mensual vigente a nivel de cliente (servicio_contratado_id IS NULL)
+        // para el periodo que se está facturando (no necesariamente la más reciente creada).
+        $periodoInicio = $periodo . '-01';
         $clientes = $db->query("
             SELECT DISTINCT c.id, c.ruc, c.razon_social, tm.monto
             FROM clientes c
             JOIN tarifas_mensuales tm ON tm.cliente_id = c.id
                 AND tm.servicio_contratado_id IS NULL
-                AND tm.fecha_fin IS NULL
                 AND tm.activo = 1
+                AND tm.fecha_inicio = (
+                    SELECT MAX(tm2.fecha_inicio)
+                    FROM tarifas_mensuales tm2
+                    WHERE tm2.cliente_id = c.id AND tm2.servicio_contratado_id IS NULL AND tm2.activo = 1
+                        AND tm2.fecha_inicio <= ?
+                        AND (tm2.fecha_fin IS NULL OR tm2.fecha_fin >= ?)
+                )
             WHERE c.estado = 'activo'
             ORDER BY c.razon_social
-        ")->getResult();
+        ", [$periodoInicio, $periodoInicio])->getResult();
 
         $excluidosIds = array_column(
             $db->query('SELECT cliente_id FROM facturacion_automatica_exclusiones')->getResultArray(),
@@ -186,6 +196,7 @@ class ApiFacturacion extends BaseController
                 'estado_pago' => 'no_pagado',
                 'origen' => 'cron',
                 'usuario_id' => null,
+                'tipo_envio_sunat' => $sede->tipo_envio ?? 'prueba',
             ]);
 
             $comprobanteId = $db->insertID();

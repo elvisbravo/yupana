@@ -41,10 +41,13 @@ $routes->post('/comprobantes/guardar', 'Comprobantes::guardar');
 $routes->post('/comprobantes/guardar-cliente', 'Comprobantes::guardarClienteRapido');
 $routes->post('/comprobantes/enviar-sunat/(:num)', 'Comprobantes::enviarSunat/$1');
 $routes->get('/comprobantes/regenerar-pdf/(:num)', 'Comprobantes::regenerarPdf/$1');
+$routes->get('/comprobantes/nota-credito/(:num)', 'Comprobantes::notaCredito/$1');
+$routes->post('/comprobantes/nota-credito/guardar', 'Comprobantes::guardarNotaCredito');
 
 $routes->get('/tarifas', 'TarifasMensuales::index');
 $routes->get('/tarifas/mensuales', 'TarifasMensuales::index');
 $routes->get('/tarifas/mensuales/listar', 'TarifasMensuales::listar');
+$routes->get('/tarifas/mensuales/cliente/(:num)', 'TarifasMensuales::porCliente/$1');
 $routes->get('/tarifas/mensuales/obtener/(:num)', 'TarifasMensuales::obtener/$1');
 $routes->post('/tarifas/mensuales/guardar', 'TarifasMensuales::guardar');
 $routes->post('/tarifas/mensuales/actualizar/(:num)', 'TarifasMensuales::actualizar/$1');
@@ -275,6 +278,8 @@ $routes->post('api/facturacion/mensajes-whatsapp', 'ApiFacturacion::registrarMen
 
 $routes->get('/whatsapp-recordatorio-pagos', 'WhatsappRecordatorios::index');
 $routes->get('/whatsapp-recordatorio-pagos/listar', 'WhatsappRecordatorios::listar');
+
+$routes->get('/chat-web-whatsapp', 'ChatWhatsapp::index');
 
 $routes->get('/solicitudes', 'Solicitudes::index');
 $routes->get('/solicitudes/listar', 'Solicitudes::listar');

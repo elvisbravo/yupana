@@ -36,6 +36,7 @@
         ajax: function (data, cb) {
             var params = new URLSearchParams({ origen: 'cron' });
             if (filtroPeriodo.value) params.set('periodo', filtroPeriodo.value);
+            if (typeof TIPO_ENVIO_ACTUAL !== 'undefined' && TIPO_ENVIO_ACTUAL) params.set('tipo_envio', TIPO_ENVIO_ACTUAL);
             fetch('/comprobantes/ventas/listar?' + params.toString())
                 .then(function (r) { return r.json(); })
                 .then(function (res) {
@@ -70,6 +71,7 @@
             } },
             { data: 8, className: 'text-end fw-bold' },
             { data: 13, orderable: false, className: 'text-end' },
+            { data: 14, orderable: false, className: 'text-end' },
         ],
         columnDefs: [
             { responsivePriority: 1, targets: [0, 5] },
@@ -93,7 +95,8 @@
     document.querySelector('#tablaGeneradas tbody').addEventListener('click', function (e) {
         var btn = e.target.closest('.enviar-sunat');
         if (!btn) return;
-        btn.disabled = true;
+        e.preventDefault();
+        btn.classList.add('disabled');
         fetch('/comprobantes/enviar-sunat/' + btn.getAttribute('data-id'), { method: 'POST' })
             .then(function (r) { return r.json(); })
             .then(function (res) {
@@ -102,7 +105,7 @@
             })
             .catch(function () {
                 alert('Error de conexión al enviar a SUNAT.');
-                btn.disabled = false;
+                btn.classList.remove('disabled');
             });
     });
 

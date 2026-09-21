@@ -45,6 +45,7 @@
                             <th>Período</th>
                             <th>Cliente</th>
                             <th>Total</th>
+                            <th>Archivos</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -57,7 +58,7 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-    <script>var PERIODOS_LABELS = <?= json_encode($periodosLabels) ?>;</script>
+    <script>var PERIODOS_LABELS = <?= json_encode($periodosLabels) ?>; var TIPO_ENVIO_ACTUAL = <?= json_encode($tipoEnvio) ?>;</script>
     <script src="<?= base_url() ?>assets/plugins/datatables/dataTables.min.js"></script>
     <script src="<?= base_url() ?>assets/plugins/datatables/dataTables.bootstrap5.min.js"></script>
     <script src="<?= base_url() ?>assets/plugins/datatables/dataTables.responsive.min.js"></script>

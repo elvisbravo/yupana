@@ -65,45 +65,96 @@ class SunatClient
 
         $numeroALetras = new NumeroALetras();
 
-        $payload = [
-            'emisor' => [
-                'ruc_emisor' => $empresa->ruc,
-                'usuario_sol' => $empresa->usuario_sol,
-                'password_sol' => $passwordSol,
-                'password_certificate' => $passwordCertificate,
-                'razon_social' => $empresa->razon_social,
-                'nombre_comercial' => $empresa->nombre_comercial ?: $empresa->razon_social,
-                'emisor_direccion' => $sede->direccion ?: $empresa->direccion_fiscal,
-                'emisor_ubigueo' => $sede->ubigeo_codigo,
-                'emisor_cod_local' => $sede->anexo ?: '0000',
-                'emisor_departamento' => $sede->departamento,
-                'emisor_provincia' => $sede->provincia,
-                'emisor_distrito' => $sede->distrito,
-            ],
-            'cliente' => [
-                'cliente_tipo_doc' => '6',
-                'cliente_num_doc' => $cliente->ruc,
-                'cliente_nombre' => $cliente->razon_social,
-            ],
-            'detalle_comprobante' => [
-                'ambiente' => $sede->tipo_envio === 'produccion' ? 'PRODUCCION' : 'PRUEBA',
-                'serie' => $comprobante->serie,
-                'correlativo' => $comprobante->numero,
-                'fecha_emision' => $comprobante->fecha_emision,
-                'fecha_vencimiento' => $comprobante->fecha_vencimiento ?: $comprobante->fecha_emision,
-                'moneda' => $comprobante->moneda,
-                'forma_pago' => $comprobante->forma_pago,
-                'total_letras' => $numeroALetras->convertir((float) $comprobante->total, $comprobante->moneda),
-            ],
-            'detalle_item' => array_map(static fn($item) => [
-                'codigo' => $item['codigo'] ?? 'P001',
-                'descripcion' => $item['descripcion'],
-                'unidad' => $item['unidad'] ?? 'ZZ',
-                'cantidad' => $item['cantidad'],
-                'valor_unitario' => $item['precio_unitario'],
-                'tipo_afectacion' => $item['tipo_afectacion'] ?? '20',
-            ], $items),
+        $emisor = [
+            'ruc_emisor' => $empresa->ruc,
+            'usuario_sol' => $empresa->usuario_sol,
+            'password_sol' => $passwordSol,
+            'password_certificate' => $passwordCertificate,
+            'razon_social' => $empresa->razon_social,
+            'nombre_comercial' => $empresa->nombre_comercial ?: $empresa->razon_social,
+            'emisor_direccion' => $sede->direccion ?: $empresa->direccion_fiscal,
+            'emisor_ubigueo' => $sede->ubigeo_codigo,
+            'emisor_cod_local' => $sede->anexo ?: '0000',
+            'emisor_departamento' => $sede->departamento,
+            'emisor_provincia' => $sede->provincia,
+            'emisor_distrito' => $sede->distrito,
         ];
+        $clienteData = [
+            'cliente_tipo_doc' => '6',
+            'cliente_num_doc' => $cliente->ruc,
+            'cliente_nombre' => $cliente->razon_social,
+        ];
+        $ambiente = $sede->tipo_envio === 'produccion' ? 'PRODUCCION' : 'PRUEBA';
+
+        if ($tipo->codigo === '07') {
+            if (!$comprobante->comprobante_referencia_id || !$comprobante->motivo_nota_credito_id) {
+                return $this->fallar($db, $comprobante, 'La nota de crédito no tiene comprobante de referencia o motivo asociado.');
+            }
+
+            $original = $db->query('
+                SELECT c.serie, c.numero, tc.codigo as tipo_codigo
+                FROM comprobantes_emitidos c
+                JOIN tipos_comprobante tc ON tc.id = c.tipo_comprobante_id
+                WHERE c.id = ?
+            ', [$comprobante->comprobante_referencia_id])->getRow();
+            $motivo = $db->table('motivos_nota_credito')->where('id', $comprobante->motivo_nota_credito_id)->get()->getRow();
+
+            if (!$original || !$motivo) {
+                return $this->fallar($db, $comprobante, 'No se pudo obtener el comprobante de referencia o el motivo de la nota de crédito.');
+            }
+
+            $payload = [
+                'emisor' => $emisor,
+                'cliente' => $clienteData,
+                'detalle_comprobante' => [
+                    'ambiente' => $ambiente,
+                    'serie' => $comprobante->serie,
+                    'correlativo' => $comprobante->numero,
+                    'fecha_emision' => $comprobante->fecha_emision,
+                    'moneda' => $comprobante->moneda,
+                    'tip_doc_afectado' => $original->tipo_codigo,
+                    'num_doc_afectado' => $original->serie . '-' . $original->numero,
+                    'cod_motivo' => $motivo->codigo,
+                    'des_motivo' => $motivo->nombre,
+                    'total_letras' => $numeroALetras->convertir((float) $comprobante->total, $comprobante->moneda),
+                    'forma_pago' => $comprobante->forma_pago,
+                    'monto_pendiente' => 0,
+                    'cuotas' => [['monto' => 0, 'fecha' => $comprobante->fecha_emision]],
+                ],
+                'detalle_item' => array_map(static fn($item) => [
+                    'codigo' => $item['codigo'] ?? 'P001',
+                    'descripcion' => $item['descripcion'],
+                    'unidad' => $item['unidad'] ?? 'ZZ',
+                    'cantidad' => $item['cantidad'],
+                    'precio_unitario' => $item['precio_unitario'],
+                    'valor_unitario' => $item['precio_unitario'],
+                    'tipo_afectacion' => $item['tipo_afectacion'] ?? '20',
+                ], $items),
+            ];
+        } else {
+            $payload = [
+                'emisor' => $emisor,
+                'cliente' => $clienteData,
+                'detalle_comprobante' => [
+                    'ambiente' => $ambiente,
+                    'serie' => $comprobante->serie,
+                    'correlativo' => $comprobante->numero,
+                    'fecha_emision' => $comprobante->fecha_emision,
+                    'fecha_vencimiento' => $comprobante->fecha_vencimiento ?: $comprobante->fecha_emision,
+                    'moneda' => $comprobante->moneda,
+                    'forma_pago' => $comprobante->forma_pago,
+                    'total_letras' => $numeroALetras->convertir((float) $comprobante->total, $comprobante->moneda),
+                ],
+                'detalle_item' => array_map(static fn($item) => [
+                    'codigo' => $item['codigo'] ?? 'P001',
+                    'descripcion' => $item['descripcion'],
+                    'unidad' => $item['unidad'] ?? 'ZZ',
+                    'cantidad' => $item['cantidad'],
+                    'valor_unitario' => $item['precio_unitario'],
+                    'tipo_afectacion' => $item['tipo_afectacion'] ?? '20',
+                ], $items),
+            ];
+        }
 
         $baseUrl = rtrim(env('SUNAT_API_URL', 'http://localhost:9500'), '/');
         $client = \Config\Services::curlrequest(['timeout' => 120]);
@@ -128,7 +179,7 @@ class SunatClient
         }
 
         $estado = strtoupper($body['estado'] ?? '');
-        $estadoSunat = str_starts_with($estado, 'ACEPTADA') ? 'aceptado' : ($estado === 'RECHAZADA' ? 'rechazado' : 'pendiente');
+        $estadoSunat = str_contains($estado, 'ACEPTADA') ? 'aceptado' : (str_contains($estado, 'RECHAZADA') ? 'rechazado' : 'pendiente');
 
         $update = [
             'estado_sunat' => $estadoSunat,

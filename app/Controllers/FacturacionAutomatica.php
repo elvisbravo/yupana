@@ -92,10 +92,12 @@ class FacturacionAutomatica extends BaseController
 
         $config = $db->table('configuracion_facturacion_automatica')->where('id', 1)->get()->getRow();
         $defaultPeriodo = $config->ultimo_periodo_generado ?? date('Y-m');
+        $sede = $config ? $db->table('sedes')->where('id', $config->sede_id)->get()->getRow() : null;
 
         $data['periodos'] = $periodos;
         $data['periodosLabels'] = $labels;
         $data['defaultPeriodo'] = $defaultPeriodo;
+        $data['tipoEnvio'] = $sede->tipo_envio ?? 'prueba';
 
         return view('facturacion_automatica/generadas', $data);
     }

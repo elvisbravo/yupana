@@ -30,6 +30,8 @@ class Clientes extends BaseController
                     SELECT MAX(tm2.fecha_inicio)
                     FROM tarifas_mensuales tm2
                     WHERE tm2.cliente_id = c.id AND tm2.activo = 1
+                        AND tm2.fecha_inicio <= CURDATE()
+                        AND (tm2.fecha_fin IS NULL OR tm2.fecha_fin >= CURDATE())
                 )
             WHERE c.estado = 'activo'
             ORDER BY c.created_at DESC
@@ -51,10 +53,7 @@ class Clientes extends BaseController
 
             $tarifaHtml = '—';
             if ($c->tarifa_monto) {
-                $mes = strtoupper(date('M', strtotime($c->tarifa_fecha_inicio)));
-                $anio = date('Y', strtotime($c->tarifa_fecha_inicio));
-                $moneda = $c->tarifa_moneda ?: 'S/';
-                $tarifaHtml = '<span class="badge badge-soft-success">' . $mes . ' ' . $anio . ': ' . $moneda . ' ' . number_format($c->tarifa_monto, 2) . '</span>';
+                $tarifaHtml = '<span class="badge badge-soft-success">' . number_format($c->tarifa_monto, 2) . '</span>';
             }
 
             $acciones = '<div class="dropdown">'
@@ -91,10 +90,16 @@ class Clientes extends BaseController
         }
 
         $db = \Config\Database::connect();
+        $hoy = date('Y-m-d');
         $tarifa = $db->table('tarifas_mensuales')
             ->where('cliente_id', $id)
-            ->where('fecha_fin', null)
-            ->orderBy('created_at', 'DESC')
+            ->where('activo', 1)
+            ->where('fecha_inicio <=', $hoy)
+            ->groupStart()
+                ->where('fecha_fin', null)
+                ->orWhere('fecha_fin >=', $hoy)
+            ->groupEnd()
+            ->orderBy('fecha_inicio', 'DESC')
             ->get()->getRow();
 
         $cliente->monto_mensual = $tarifa ? (float)$tarifa->monto : null;
@@ -196,7 +201,8 @@ class Clientes extends BaseController
         $fechaInicio = $this->request->getPost('tarifa_fecha_inicio');
 
         if ($monto && $fechaInicio) {
-            $db->table('tarifas_mensuales')->where('cliente_id', $id)->where('fecha_fin', null)->update(['fecha_fin' => date('Y-m-d')]);
+            $fechaCierre = date('Y-m-d', strtotime($fechaInicio . ' -1 day'));
+            $db->table('tarifas_mensuales')->where('cliente_id', $id)->where('fecha_fin', null)->update(['fecha_fin' => $fechaCierre]);
 
             $db->table('tarifas_mensuales')->insert([
                 'cliente_id'  => $id,

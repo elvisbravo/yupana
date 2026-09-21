@@ -2,6 +2,15 @@
 
 <?= $this->section('styles') ?>
     <link href="<?= base_url() ?>assets/plugins/datatables/responsive.bootstrap5.min.css" rel="stylesheet" type="text/css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+    <style>
+        #tarifaModal .choices__list--single .choices__item {
+            background-color: transparent;
+            border: none;
+            padding-left: 0;
+            color: var(--ins-body-color);
+        }
+    </style>
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
@@ -26,12 +35,12 @@
                     <thead class="thead-sm text-uppercase fs-xxs">
                         <tr>
                             <th>Cliente</th>
-                            <th>Servicio</th>
                             <th>Monto</th>
                             <th>Moneda</th>
-                            <th>Fecha Inicio</th>
-                            <th>Fecha Fin</th>
+                            <th>Periodo Inicio</th>
+                            <th>Periodo Fin</th>
                             <th>Motivo</th>
+                            <th>Estado</th>
                             <th style="width: 90px;">Acción</th>
                         </tr>
                     </thead>
@@ -42,7 +51,7 @@
 </div>
 
 <div class="modal fade" id="tarifaModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-md modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form id="tarifaForm">
                 <div class="modal-header">
@@ -54,7 +63,7 @@
 
                     <div class="mb-2">
                         <label class="form-label">Cliente <span class="text-danger">*</span></label>
-                        <select class="form-select form-select-sm" name="cliente_id" id="f_cliente">
+                        <select class="form-select form-select-sm" name="cliente_id" id="f_cliente" required>
                             <option value="">Seleccionar...</option>
                             <?php foreach ($clientes as $c): ?>
                             <option value="<?= $c->id ?>"><?= esc($c->razon_social) ?></option>
@@ -62,38 +71,28 @@
                         </select>
                     </div>
 
-                    <div class="mb-2">
-                        <label class="form-label">Servicio Contratado</label>
-                        <select class="form-select form-select-sm" name="servicio_contratado_id" id="f_servicio">
-                            <option value="">Seleccionar...</option>
-                            <?php foreach ($servicios as $s): ?>
-                            <option value="<?= $s->id ?>">#<?= $s->id ?> - Cliente ID <?= $s->cliente_id ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
                     <div class="row g-2 mb-2">
                         <div class="col-md-6">
                             <label class="form-label">Monto <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" min="0" class="form-control form-control-sm" name="monto" id="f_monto">
+                            <input type="number" step="0.01" min="0" class="form-control form-control-sm" name="monto" id="f_monto" required>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Moneda <span class="text-danger">*</span></label>
-                            <select class="form-select form-select-sm" name="moneda" id="f_moneda">
+                            <select class="form-select form-select-sm" name="moneda" id="f_moneda" required>
                                 <option value="PEN">PEN</option>
                                 <option value="USD">USD</option>
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Fecha Inicio <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control form-control-sm" name="fecha_inicio" id="f_fecha_inicio">
+                            <label class="form-label">Periodo de Inicio <span class="text-danger">*</span></label>
+                            <input type="month" class="form-control form-control-sm" name="fecha_inicio" id="f_fecha_inicio" required>
                         </div>
                     </div>
 
                     <div class="row g-2 mb-2">
                         <div class="col-md-6">
-                            <label class="form-label">Fecha Fin</label>
-                            <input type="date" class="form-control form-control-sm" name="fecha_fin" id="f_fecha_fin">
+                            <label class="form-label">Periodo de Fin</label>
+                            <input type="month" class="form-control form-control-sm" name="fecha_fin" id="f_fecha_fin">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Motivo Cambio</label>
@@ -113,6 +112,33 @@
     </div>
 </div>
 
+<div class="modal fade" id="tarifasClienteModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tarifas de <span id="tc_cliente_nombre"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-sm table-striped align-middle mb-0">
+                    <thead class="thead-sm text-uppercase fs-xxs">
+                        <tr>
+                            <th>Periodo Inicio</th>
+                            <th>Periodo Fin</th>
+                            <th>Monto</th>
+                            <th>Moneda</th>
+                            <th>Motivo</th>
+                            <th>Estado</th>
+                            <th style="width: 90px;">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tc_tabla_body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
@@ -120,5 +146,6 @@
     <script src="<?= base_url() ?>assets/plugins/datatables/dataTables.bootstrap5.min.js"></script>
     <script src="<?= base_url() ?>assets/plugins/datatables/dataTables.responsive.min.js"></script>
     <script src="<?= base_url() ?>assets/plugins/datatables/responsive.bootstrap5.min.js"></script>
+    <script src="<?= base_url() ?>assets/plugins/choices/choices.min.js"></script>
     <script src="<?= base_url() ?>js/tarifas_mensuales.js"></script>
 <?= $this->endSection() ?>
