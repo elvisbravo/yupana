@@ -280,6 +280,22 @@ $routes->get('/whatsapp-recordatorio-pagos', 'WhatsappRecordatorios::index');
 $routes->get('/whatsapp-recordatorio-pagos/listar', 'WhatsappRecordatorios::listar');
 
 $routes->get('/chat-web-whatsapp', 'ChatWhatsapp::index');
+$routes->get('/chat-web-whatsapp/chats', 'ChatWhatsapp::chats');
+$routes->post('/chat-web-whatsapp/chats/nuevo', 'ChatWhatsapp::nuevo');
+$routes->get('/chat-web-whatsapp/clientes', 'ChatWhatsapp::buscarClientes');
+$routes->get('/chat-web-whatsapp/chats/(:num)/mensajes', 'ChatWhatsapp::mensajes/$1');
+$routes->post('/chat-web-whatsapp/chats/(:num)/enviar', 'ChatWhatsapp::enviar/$1');
+$routes->post('/chat-web-whatsapp/chats/(:num)/transferir', 'ChatWhatsapp::transferir/$1');
+$routes->post('/chat-web-whatsapp/chats/(:num)/cerrar', 'ChatWhatsapp::cerrar/$1');
+$routes->get('/chat-web-whatsapp/chats/(:num)/lecturas', 'ChatWhatsapp::lecturas/$1');
+$routes->get('/chat-web-whatsapp/media/(:num)', 'ChatWhatsapp::media/$1');
+
+$routes->group('api/whatsapp', ['filter' => 'apitoken'], function ($routes) {
+    $routes->post('webhook', 'ApiWhatsapp::webhook');
+    $routes->get('salientes', 'ApiWhatsapp::salientes');
+    $routes->post('salientes/(:num)/resultado', 'ApiWhatsapp::resultado/$1');
+    $routes->get('media/(:num)', 'ApiWhatsapp::media/$1');
+});
 
 $routes->get('/solicitudes', 'Solicitudes::index');
 $routes->get('/solicitudes/listar', 'Solicitudes::listar');
